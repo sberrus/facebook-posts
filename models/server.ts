@@ -1,6 +1,7 @@
 // imports
+import bodyParser from "body-parser";
 import express, { Application } from "express";
-import pingRouter from "../routes/ping.routes";
+import facebookRouter from "../routes/facebook.routes";
 
 class Server {
 	// properties
@@ -9,19 +10,24 @@ class Server {
 
 	// api paths
 	private apiPaths = {
-		ping: "/api/ping",
+		ping: "/api/facebook",
 	};
 
 	constructor() {
 		this.app = express();
 		this.port = process.env.PORT || "8080";
 
+		// init middlewares
+		this.middlewares();
 		// init routes
 		this.routes();
 	}
 
+	private middlewares() {
+		this.app.use(bodyParser.json());
+	}
 	private routes() {
-		this.app.use(this.apiPaths.ping, pingRouter);
+		this.app.use(this.apiPaths.ping, facebookRouter);
 	}
 
 	listen() {
