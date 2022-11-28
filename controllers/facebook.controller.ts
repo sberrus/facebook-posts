@@ -37,6 +37,9 @@ export const deleteProgrammedJob = (req: Request, res: Response) => {
 	const id = req.params.id;
 	scheduler.cancellJob(id);
 
+	// change status in firestore
+	firestore.changeJobStatus(id, "trash");
+
 	//
 	return res.json({ ok: true, msg: `job ${id} deleted succesfully` });
 };

@@ -23,16 +23,20 @@ class FirestoreController {
 	 *
 	 * @returns Jobs collections saved in db
 	 */
-	public async getJobs() {
+	public async getJobsProgrammed() {
 		try {
-			const snapshot = await this.jobsReference.get();
-
+			const snapshot = await this.jobsReference.where("job_status", "==", "programmed").get();
 			return snapshot.docs.map((doc) => doc.data());
 		} catch (error) {
 			console.log(error);
 		}
 	}
 
+	/**
+	 * Insert new document with job's information
+	 * @param param0
+	 * @param param1
+	 */
 	public async createJob(
 		{ id }: JobType,
 		{
@@ -57,10 +61,33 @@ class FirestoreController {
 				asset_src,
 				location,
 				schedule_config,
+				job_status: "programmed",
 			});
 		} catch (error) {
 			console.log(error);
 			throw new Error("Error when adding doc to firestore");
+		}
+	}
+
+	/**
+	 * Change the job's status in firestore document
+	 * @param id firestore's job id. Don't confuse with firestore auto-generated document id. It's the id property
+	 * given by the system.
+	 * @param status new status for the job. EJ: "programmed" | "draft" | "trash".
+	 */
+	public async changeJobStatus(id: string, status: string) {
+		try {
+			// find single job
+			const job = await this.jobsReference.where("id", "==", id).get();
+			// check if job exists
+			if (job.empty) {
+				return;
+			}
+
+			const foundJobRef = job.docs[0].ref;
+			await foundJobRef.update({ job_status: status });
+		} catch (error) {
+			throw new Error("Error in server");
 		}
 	}
 }

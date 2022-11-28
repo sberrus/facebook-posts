@@ -19,6 +19,7 @@ export interface PostRequestBodyType {
 	asset_src?: string;
 	location?: string;
 	schedule_config?: ScheduleConfigType;
+	job_status?: "programmed" | "draft" | "trash";
 }
 
 export interface JobType {

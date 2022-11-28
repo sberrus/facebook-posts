@@ -57,11 +57,15 @@ class PostScheduler {
 	 * @param id job id
 	 */
 	public cancellJob(id: string) {
+		// find job in collection
 		const job = this._jobsCollection.find((jobs) => {
 			return jobs.id === id;
 		});
+
+		// cancel schedule job
 		job?.job.cancel();
 
+		// delete schedule from sistem's schedule collection
 		const updatedCollection = this._jobsCollection.filter((job) => job.id !== id);
 		this._jobsCollection = updatedCollection;
 	}
@@ -82,7 +86,7 @@ class PostScheduler {
 	 */
 	private recoverStoredJobs = async () => {
 		// get saved jobs
-		const jobs = await firestore.getJobs();
+		const jobs = await firestore.getJobsProgrammed();
 		// if jobs found in firestore, add to scheduler tasks
 		jobs &&
 			jobs.length > 0 &&
