@@ -1,6 +1,6 @@
 // imports
 import { getFirestore, Firestore, CollectionReference } from "firebase-admin/firestore";
-import { FacebookPostType, JobType } from "../types/jobs";
+import { PostRequestBodyType, JobType } from "../types/jobs";
 
 /**
  * Firestore controller
@@ -35,21 +35,28 @@ class FirestoreController {
 
 	public async createJob(
 		{ id }: JobType,
-		{ message = "", type = "text", url = "", emotion = "", asset_src = "", location = "" }: FacebookPostType
+		{
+			title = "",
+			message = "",
+			type = "text",
+			url = "",
+			emotion = "",
+			asset_src = "",
+			location = "",
+			schedule_config,
+		}: PostRequestBodyType
 	) {
 		try {
-			const res = await this.jobsReference.add({
-				schedule: {
-					id,
-				},
-				PostData: {
-					message,
-					type,
-					asset_src,
-					emotion,
-					location,
-					url,
-				},
+			await this.jobsReference.add({
+				id,
+				title,
+				message,
+				type,
+				url,
+				emotion,
+				asset_src,
+				location,
+				schedule_config,
 			});
 		} catch (error) {
 			console.log(error);

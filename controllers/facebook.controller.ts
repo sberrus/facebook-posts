@@ -3,17 +3,17 @@ import { Request, Response } from "express";
 // import { createPagePost, getPageAccessToken } from "../helpers/facebookPosts";
 // scheduler app
 import { firestore, scheduler } from "../app";
-import { FacebookPostType } from "../types/jobs";
+import { PostRequestBodyType } from "../types/jobs";
 
 /**
  *	create a new job and save it into firestore bd.
  */
 export const addJob = async (req: Request, res: Response) => {
 	// req body
-	const body: FacebookPostType = req.body;
+	const body: PostRequestBodyType = req.body;
 
 	// create a new job
-	const jobData = scheduler.addJob();
+	const jobData = scheduler.addJob(body);
 
 	try {
 		// save job in firestore
@@ -25,7 +25,18 @@ export const addJob = async (req: Request, res: Response) => {
 	}
 };
 
-export const getProgramedJobs = (req: Request, res: Response) => {
+export const getProgrammedJobs = (req: Request, res: Response) => {
 	const jobs = scheduler.getJobs();
+
+	//
 	return res.json({ ok: true, jobs });
+};
+
+export const deleteProgrammedJob = (req: Request, res: Response) => {
+	//get job id
+	const id = req.params.id;
+	scheduler.cancellJob(id);
+
+	//
+	return res.json({ ok: true, msg: `job ${id} deleted succesfully` });
 };
