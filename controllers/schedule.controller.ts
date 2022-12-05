@@ -12,10 +12,9 @@ export const addJob = async (req: Request, res: Response) => {
 	// req body
 	const body: PostRequestBodyType = req.body;
 
-	// create a new job
-	const jobData = scheduler.addJob(body);
-
 	try {
+		// create a new job
+		const jobData = await scheduler.addJob(body);
 		// save job in firestore
 		await firestore.createJob(jobData, body);
 		return res.json({ ok: true, msg: `job ${jobData.id} succesfully created` });

@@ -16,6 +16,8 @@ scheduleRouter.post(
 	"/schedule-post",
 	[
 		body("owner").notEmpty(),
+		body("page_id").notEmpty(),
+		body("sharing_groups_ids").notEmpty(),
 		body("title").notEmpty(),
 		body("message").notEmpty().withMessage("Message must be provided"),
 		body("type").custom(isValidType),

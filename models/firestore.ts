@@ -30,14 +30,13 @@ class FirestoreController {
 			const snapshot = await this.jobsReference.where("job_status", "==", "programmed").get();
 			return snapshot.docs.map((doc) => doc.data());
 		} catch (error) {
-			console.log(error);
+			console.log("🚀 ~ file: firestore.ts:33 ~ FirestoreController ~ getJobsProgrammed ~ error", error);
+			throw error;
 		}
 	}
 
 	/**
 	 * Insert new document with job's information
-	 * @param param0
-	 * @param param1
 	 */
 	public async createJob(
 		{ id }: JobType,
@@ -66,7 +65,7 @@ class FirestoreController {
 				job_status: "programmed",
 			});
 		} catch (error) {
-			console.log(error);
+			console.log("🚀 ~ file: firestore.ts:70 ~ FirestoreController ~ error", error);
 			throw new Error("Error when adding doc to firestore");
 		}
 	}
@@ -89,6 +88,7 @@ class FirestoreController {
 			const foundJobRef = job.docs[0].ref;
 			await foundJobRef.update({ job_status: status });
 		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:93 ~ FirestoreController ~ changeJobStatus ~ error", error);
 			throw new Error("Error in server");
 		}
 	}
@@ -97,7 +97,22 @@ class FirestoreController {
 	 * Save long live token into workspace collection
 	 */
 	public async saveLongLivedToken(owner: string, token: string) {
-		this.tokensReference.doc(owner).set({ LLT: token });
+		try {
+			this.tokensReference.doc(owner).set({ LLT: token });
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:103 ~ FirestoreController ~ saveLongLivedToken ~ error", error);
+			throw error;
+		}
+	}
+
+	public async getLongLivedToken(owner: string) {
+		try {
+			const res = await this.tokensReference.doc(owner).get();
+			return res.data()?.LLT;
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:111 ~ FirestoreController ~ getLongLivedToken ~ error", error);
+			throw error;
+		}
 	}
 }
 //

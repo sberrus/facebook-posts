@@ -1,6 +1,5 @@
 // imports
 import schedule from "node-schedule";
-// https://developers.facebook.com/docs/graph-api/reference/v15.0/page/feed
 
 export interface ScheduleConfigType {
 	day: number;
@@ -12,9 +11,11 @@ export interface ScheduleConfigType {
 // request body
 export interface PostRequestBodyType {
 	owner: string;
+	page_id: string;
 	title: string;
 	message: string;
 	type: "text" | "img" | "video";
+	sharing_groups_ids: string[];
 	url?: string;
 	emotion?: string;
 	asset_src?: string;

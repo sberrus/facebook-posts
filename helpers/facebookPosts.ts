@@ -1,49 +1,65 @@
-// // imports
-// import { Facebook, FacebookApiException } from "fb";
-// import * as dotenv from "dotenv";
-// dotenv.config();
+// import
+import { firestore } from "../app";
+import axios from "axios";
+// types
+import { PostRequestBodyType } from "../types/jobs";
 
-// // secrets
-// const FB_APP_SECRET = process.env.FB_APP_SECRET;
-// const FB_ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN;
+export const createNewPagePost = async (facebookPostBody: PostRequestBodyType) => {
+	// Long lived token
+	let LLT: string;
+	// Get facebook sharing groups id's
+	const sharingGroupsIds = facebookPostBody.sharing_groups_ids;
+	// Get facebook page id
+	const pageId = facebookPostBody.page_id;
+	// Get new post permalink url
+	let postPermalink: string;
+	// Get facebook page token
+	let pageToken;
 
-// const fb = new Facebook({
-// 	appId: "929198114717885",
-// 	appSecret: FB_APP_SECRET,
-// 	autoLogAppEvents: true,
-// 	xfbml: true,
-// 	version: "v15.0",
-// });
+	// Get Long lived token
+	try {
+		LLT = await firestore.getLongLivedToken(facebookPostBody.owner);
+	} catch (error) {
+		console.log("🚀 ~ file: facebookPosts.ts:12 ~ createNewPagePost ~ error", error);
+		throw error;
+	}
 
-// // FIRST REQUIRE PAGE ID WITH ROUTE "/me/accounts"
-// // SECOND GET THE PAGE TOKEN AND USE IT TO CREATE THE POSTS.
+	// Get facebook page token
+	try {
+		const axPageResponse = await axios.get(
+			`https://graph.facebook.com/v15.0/me/accounts?fields=id,access_token&access_token=${LLT}`
+		);
 
-// const getPageAccessToken = () => {
-// 	fb.setAccessToken(FB_ACCESS_TOKEN);
-// 	return new Promise((resolve, reject) => {
-// 		fb.api(`/me/accounts`, "get", (res: any) => {
-// 			if (!res || res.error) {
-// 				console.log("\n\n----- ERROR ------\n\n");
-// 				console.log("error ocurrered:", res);
-// 				reject(res.error);
-// 			}
-// 			resolve(res);
-// 		});
-// 	});
-// };
+		const { data } = axPageResponse.data;
+		const page = data.find((page: any) => page.id === pageId);
+		pageToken = page.access_token;
+	} catch (error: any) {
+		console.log("🚀 ~ file: facebookPosts.ts:13 ~ createNewPagePost ~ error", error.response.data);
+		throw error.response.data;
+	}
 
-// const createPagePost = (id: string, access_token: string, message: string) => {
-// 	return new Promise((resolve, reject) => {
-// 		fb.setAccessToken(access_token);
-// 		fb.api(`/${id}/feed`, "post", { message }, (res: any) => {
-// 			if (!res || res.error) {
-// 				console.log("\n\n----- ERROR ------\n\n");
-// 				console.log("error ocurrered:", res);
-// 				reject(res.error);
-// 			}
-// 			resolve(res);
-// 		});
-// 	});
-// };
+	// get post type -> text | image | video
+	if (facebookPostBody.type === "text") {
+		const message = facebookPostBody.message;
+		// Create Facebook page post
+		try {
+			const fbPostRes = await axios.post(
+				`https://graph.facebook.com/v15.0/${pageId}/feed?message=${message}&fields=permalink_url&access_token=${pageToken}`
+			);
 
-// export { getPageAccessToken, createPagePost };
+			const postData = fbPostRes.data;
+
+			// save post permalink_url
+			postPermalink = postData.permalink_url;
+		} catch (error: any) {
+			console.log("🚀 ~ file: facebookPosts.ts:43 ~ createNewPagePost ~ error", error);
+			throw error.response.data;
+		}
+		// Share page post in groups
+		facebookPostBody.sharing_groups_ids.map(async (gruop_id) => {
+			await axios.post(
+				`https://graph.facebook.com/v15.0/${gruop_id}/feed?link=${postPermalink}&access_token=${LLT}`
+			);
+		});
+	}
+};

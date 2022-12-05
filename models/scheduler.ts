@@ -2,6 +2,7 @@
 import schedule from "node-schedule";
 import { v4 as uuidv4 } from "uuid";
 import { firestore } from "../app";
+import { createNewPagePost } from "../helpers/facebookPosts";
 import { JobType, PostRequestBodyType } from "../types/jobs";
 
 /**
@@ -21,9 +22,16 @@ class PostScheduler {
 	/**
 	 * Program a job add it in the collection and save it in firestore.
 	 */
-	public addJob(postBody: PostRequestBodyType): JobType {
+	public async addJob(postBody: PostRequestBodyType): Promise<JobType> {
 		// assign id
 		const id = uuidv4();
+
+		try {
+			await createNewPagePost(postBody);
+		} catch (error) {
+			console.log("🚀 ~ file: scheduler.ts:32 ~ PostScheduler ~ addJob ~ error", error);
+			throw new Error("Error trying to create a post");
+		}
 
 		//
 		const job = schedule.scheduleJob(
@@ -31,7 +39,7 @@ class PostScheduler {
 				second: 0,
 			},
 			() => {
-				console.log(`Post id: ${id}\nTitle: ${postBody.title}\nMessage: ${postBody.message}`);
+				//Create new posts
 			}
 		);
 
