@@ -1,7 +1,8 @@
 // imports
 import bodyParser from "body-parser";
 import express, { Application } from "express";
-import facebookRouter from "../routes/facebook.routes";
+import scheduleRouter from "../routes/schedule.routes";
+import tokenRouter from "../routes/token.routes";
 
 class Server {
 	// properties
@@ -10,7 +11,8 @@ class Server {
 
 	// api paths
 	private apiPaths = {
-		ping: "/api/facebook",
+		schedule: "/api/schedule",
+		token: "/api/token",
 	};
 
 	constructor() {
@@ -27,7 +29,8 @@ class Server {
 		this.app.use(bodyParser.json());
 	}
 	private routes() {
-		this.app.use(this.apiPaths.ping, facebookRouter);
+		this.app.use(this.apiPaths.schedule, scheduleRouter);
+		this.app.use(this.apiPaths.token, tokenRouter);
 	}
 
 	listen() {

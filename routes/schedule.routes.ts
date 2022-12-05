@@ -2,19 +2,20 @@
 import { Router } from "express";
 import { body, param } from "express-validator";
 // scheduler controller
-import { addJob, deleteProgrammedJob, getProgrammedJobs } from "../controllers/facebook.controller";
+import { addJob, deleteProgrammedJob, getProgrammedJobs } from "../controllers/schedule.controller";
 // custom validators
-import { checkIfJobExists, checkScheduleConfig, isValidType } from "../middlewares/express-custom-validators";
+import { checkIfJobExists, checkScheduleConfig, isValidType } from "../middlewares/jobs.middleware";
 // middlewares
 import { errorHandler } from "../middlewares/express-validator";
 
 //
-const facebookRouter = Router();
+const scheduleRouter = Router();
 
 // create a new job and save it into bd
-facebookRouter.post(
+scheduleRouter.post(
 	"/schedule-post",
 	[
+		body("owner").notEmpty(),
 		body("title").notEmpty(),
 		body("message").notEmpty().withMessage("Message must be provided"),
 		body("type").custom(isValidType),
@@ -24,8 +25,8 @@ facebookRouter.post(
 	addJob
 );
 // get all jobs
-facebookRouter.get("/schedule-post/", getProgrammedJobs);
+scheduleRouter.get("/schedule-post/", getProgrammedJobs);
 
-facebookRouter.delete("/schedule-post/:id", [param("id").custom(checkIfJobExists), errorHandler], deleteProgrammedJob);
+scheduleRouter.delete("/schedule-post/:id", [param("id").custom(checkIfJobExists), errorHandler], deleteProgrammedJob);
 
-export default facebookRouter;
+export default scheduleRouter;

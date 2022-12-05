@@ -11,6 +11,7 @@ export interface ScheduleConfigType {
 }
 // request body
 export interface PostRequestBodyType {
+	owner: string;
 	title: string;
 	message: string;
 	type: "text" | "img" | "video";

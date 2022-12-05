@@ -10,6 +10,7 @@ class FirestoreController {
 	private db: Firestore;
 	// firestore jobs reference
 	private jobsReference: CollectionReference<FirebaseFirestore.DocumentData>;
+	private tokensReference: CollectionReference<FirebaseFirestore.DocumentData>;
 
 	//
 	constructor() {
@@ -17,6 +18,7 @@ class FirestoreController {
 		this.db = getFirestore();
 		// get firestore jobs reference
 		this.jobsReference = this.db.collection("jobs");
+		this.tokensReference = this.db.collection("tokens");
 	}
 
 	/**
@@ -89,6 +91,13 @@ class FirestoreController {
 		} catch (error) {
 			throw new Error("Error in server");
 		}
+	}
+
+	/**
+	 * Save long live token into workspace collection
+	 */
+	public async saveLongLivedToken(owner: string, token: string) {
+		this.tokensReference.doc(owner).set({ LLT: token });
 	}
 }
 //
