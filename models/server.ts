@@ -2,6 +2,7 @@
 import bodyParser from "body-parser";
 import express, { Application } from "express";
 import scheduleRouter from "../routes/schedule.routes";
+import testRouter from "../routes/test.routes";
 import tokenRouter from "../routes/token.routes";
 
 class Server {
@@ -13,6 +14,7 @@ class Server {
 	private apiPaths = {
 		schedule: "/api/schedule",
 		token: "/api/token",
+		test: "/api/test",
 	};
 
 	constructor() {
@@ -31,6 +33,7 @@ class Server {
 	private routes() {
 		this.app.use(this.apiPaths.schedule, scheduleRouter);
 		this.app.use(this.apiPaths.token, tokenRouter);
+		this.app.use(this.apiPaths.test, testRouter);
 	}
 
 	listen() {

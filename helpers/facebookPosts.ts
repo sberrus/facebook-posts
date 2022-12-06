@@ -38,7 +38,7 @@ export const createNewPagePost = async (facebookPostBody: PostRequestBodyType) =
 		throw error.response.data;
 	}
 
-	// get post type -> text | image | video
+	/** TEXT CASE */
 	if (facebookPostBody.type === "text") {
 		const message = facebookPostBody.message;
 		// Create Facebook page post
@@ -56,10 +56,12 @@ export const createNewPagePost = async (facebookPostBody: PostRequestBodyType) =
 			throw error.response.data;
 		}
 		// Share page post in groups
-		facebookPostBody.sharing_groups_ids.map(async (gruop_id) => {
+		sharingGroupsIds.map(async (gruop_id) => {
 			await axios.post(
 				`https://graph.facebook.com/v15.0/${gruop_id}/feed?link=${postPermalink}&access_token=${LLT}`
 			);
 		});
 	}
+
+	/** IMAGE CASE */
 };
