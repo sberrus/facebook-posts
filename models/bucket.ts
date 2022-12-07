@@ -30,16 +30,12 @@ class BucketController {
 			});
 
 			blobStream.on("finish", async () => {
-				// Create URL for directly file access via HTTP.
-				const publicUrl = format(`https://storage.googleapis.com/${this.bucket.name}/${blob.name}`);
-
 				try {
 					// Make the file public
 					await this.bucket.file(req.file?.originalname!).makePublic();
 				} catch (err) {
 					throw {
 						message: `Uploaded the file successfully: ${req.file?.originalname}, but public access is denied!`,
-						url: publicUrl,
 					};
 				}
 			});

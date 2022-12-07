@@ -11,14 +11,16 @@ class FirestoreController {
 	// firestore jobs reference
 	private jobsReference: CollectionReference<FirebaseFirestore.DocumentData>;
 	private tokensReference: CollectionReference<FirebaseFirestore.DocumentData>;
+	private workspacesReference: CollectionReference<FirebaseFirestore.DocumentData>;
 
 	//
 	constructor() {
 		// get firestore instance
 		this.db = getFirestore();
-		// get firestore jobs reference
+		// get firestore references
 		this.jobsReference = this.db.collection("jobs");
 		this.tokensReference = this.db.collection("tokens");
+		this.workspacesReference = this.db.collection("workspaces");
 	}
 
 	/**
@@ -113,6 +115,18 @@ class FirestoreController {
 			console.log("🚀 ~ file: firestore.ts:111 ~ FirestoreController ~ getLongLivedToken ~ error", error);
 			throw error;
 		}
+	}
+
+	/**
+	 * check if workspace exists
+	 */
+	public async workspaceExists(workspace: string) {
+		const res = await this.workspacesReference.get();
+		const found = res.docs.find((doc) => {
+			return doc.data().facebook_admin === workspace;
+		});
+
+		return !!found;
 	}
 }
 //

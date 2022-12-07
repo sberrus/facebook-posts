@@ -3,13 +3,15 @@ import { bucket } from "../app";
 
 export const uploadAssetsToFirebase = async (req: Request, res: Response) => {
 	try {
+		// check if file exists
 		if (!req.file) {
 			return res.status(400).json({ ok: false, msg: "you must send a file" });
 		}
 
-		// save asset into bucket
 		try {
+			// save asset into bucket
 			await bucket.uploadFile(req);
+
 			return res.json({ ok: true, msg: "file uploaded successfully" });
 		} catch (error) {
 			console.log("🚀 ~ file: test.controller.ts:13 ~ uploadResourceToFirebase ~ error", error);
