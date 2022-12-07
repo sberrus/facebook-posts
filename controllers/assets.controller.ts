@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { bucket } from "../app";
 
-export const uploadResourceToFirebase = async (req: Request, res: Response) => {
+export const uploadAssetsToFirebase = async (req: Request, res: Response) => {
 	try {
 		if (!req.file) {
 			return res.status(400).json({ ok: false, msg: "you must send a file" });
@@ -21,7 +21,7 @@ export const uploadResourceToFirebase = async (req: Request, res: Response) => {
 	}
 };
 
-export const getResourcesList = async (req: Request, res: Response) => {
+export const getAssetsList = async (req: Request, res: Response) => {
 	//
 	try {
 		const files = await bucket.getFilesList();

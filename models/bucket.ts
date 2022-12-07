@@ -20,7 +20,7 @@ class BucketController {
 	public async uploadFile(req: Request) {
 		try {
 			// Create a new blob in the bucket and upload the file data.
-			const blob = this.bucket.file(`images/${req.file?.originalname!}`);
+			const blob = this.bucket.file(req.file?.originalname!);
 			const blobStream = blob.createWriteStream({
 				resumable: false,
 			});
@@ -35,7 +35,7 @@ class BucketController {
 
 				try {
 					// Make the file public
-					await this.bucket.file(`images/${req.file?.originalname!}`).makePublic();
+					await this.bucket.file(req.file?.originalname!).makePublic();
 				} catch (err) {
 					throw {
 						message: `Uploaded the file successfully: ${req.file?.originalname}, but public access is denied!`,
@@ -63,6 +63,7 @@ class BucketController {
 				return {
 					name: file.name,
 					url: file.metadata.mediaLink,
+					uri_encoded: encodeURIComponent(file.metadata.mediaLink),
 				};
 			});
 		} catch (err) {
