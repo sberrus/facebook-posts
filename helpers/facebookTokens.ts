@@ -23,3 +23,5 @@ export const getLongLivedToken = async (access_token: string) => {
 		throw error;
 	}
 };
+
+export const isLongLivedTokenValid = (longLivedToken: string) => {};

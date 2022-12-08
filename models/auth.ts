@@ -8,19 +8,12 @@ class AuthController {
 	}
 
 	/**
-	 *
+	 * Check if token is valid and returns user data if exists
 	 * @param token
-	 * @returns boolean
 	 */
 	public async checkAuthToken(token: string) {
 		try {
-			const response = await this.auth.verifyIdToken(token);
-
-			if (!response) {
-				return false;
-			}
-
-			return true;
+			return await this.auth.verifyIdToken(token);
 		} catch (error) {
 			console.log("🚀 ~ file: auth.ts:18 ~ AuthController ~ checkAuthToken ~ error", error);
 		}

@@ -11,10 +11,12 @@ const processFile = Multer({
 
 const processFileMiddleware = util.promisify(processFile);
 
-export default processFileMiddleware;
-
+/**
+ * Check if workspace exists custom validator 
+ * @param workspace 
+ */
 export const checkIfWorkspaceExists = async (workspace: string) => {
-	let found = false;
+	let found;
 
 	try {
 		found = await firestore.workspaceExists(workspace);
@@ -26,3 +28,5 @@ export const checkIfWorkspaceExists = async (workspace: string) => {
 		throw new Error("workspace not found");
 	}
 };
+
+export default processFileMiddleware;

@@ -1,5 +1,6 @@
 // imports
 import { getFirestore, Firestore, CollectionReference } from "firebase-admin/firestore";
+import { firestore } from "../app";
 import { PostRequestBodyType, JobType } from "../types/jobs";
 
 /**
@@ -12,6 +13,7 @@ class FirestoreController {
 	private jobsReference: CollectionReference<FirebaseFirestore.DocumentData>;
 	private tokensReference: CollectionReference<FirebaseFirestore.DocumentData>;
 	private workspacesReference: CollectionReference<FirebaseFirestore.DocumentData>;
+	private usersReference: CollectionReference<FirebaseFirestore.DocumentData>;
 
 	//
 	constructor() {
@@ -21,6 +23,7 @@ class FirestoreController {
 		this.jobsReference = this.db.collection("jobs");
 		this.tokensReference = this.db.collection("tokens");
 		this.workspacesReference = this.db.collection("workspaces");
+		this.usersReference = this.db.collection("users");
 	}
 
 	/**
@@ -118,18 +121,63 @@ class FirestoreController {
 	}
 
 	/**
-	 * check if workspace exists
+	 * check if workspace exists, if exists returns it
 	 */
 	public async workspaceExists(workspace: string) {
 		const res = await this.workspacesReference.get();
 
 		console.log(res.docs[0].id); //this is the data we need to compare the existence of the workspace
 
-		const found = res.docs.find((doc) => {
-			return doc.data().facebook_admin === workspace;
+		const workspaceFound = res.docs.find((doc) => {
+			return doc.id === workspace;
 		});
 
-		return false;
+		return workspaceFound;
+	}
+
+	/**
+	 * Get users data and workspace information by its firebase uid
+	 */
+	public async getUser(uid: string) {
+		// get users passed their
+		try {
+			const user = await this.usersReference.doc(uid).get();
+			if (user.exists) {
+				return user;
+			}
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:149 ~ FirestoreController ~ getUser ~ error", error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Get user workspace information by its firebase uid
+	 * @param firebaseUserUid firebase user uid
+	 */
+	public async getUserWorkspace(firebaseUserUid: string) {
+		try {
+			const user = await this.getUser(firebaseUserUid);
+			// check if user exists
+			if (!user?.exists) {
+				console.log("🚀 ~ file: firestore.ts:166 ~ FirestoreController ~ getUserWorkspace ~ exists", user?.exists);
+				return;
+			}
+
+			// get firestore workspace user
+			const workspaceUser = user.data();
+
+			if (workspaceUser) {
+				// find workspace
+				const workspace = await this.workspacesReference.doc(workspaceUser.workspace).get();
+				if (workspace.exists) {
+					return workspace.data();
+				}
+			}
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:174 ~ FirestoreController ~ getUserWorkspace ~ error", error);
+			throw error;
+		}
 	}
 }
 //
