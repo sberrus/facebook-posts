@@ -122,11 +122,14 @@ class FirestoreController {
 	 */
 	public async workspaceExists(workspace: string) {
 		const res = await this.workspacesReference.get();
+
+		console.log(res.docs[0].id); //this is the data we need to compare the existence of the workspace
+
 		const found = res.docs.find((doc) => {
 			return doc.data().facebook_admin === workspace;
 		});
 
-		return !!found;
+		return false;
 	}
 }
 //

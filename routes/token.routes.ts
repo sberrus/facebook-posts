@@ -1,7 +1,8 @@
 // imports
 import { Router } from "express";
-import { body, query } from "express-validator";
-import { generateLongLiveToken } from "../controllers/token.controller";
+import { body, header, query } from "express-validator";
+import { checkTokenStatus, generateLongLiveToken } from "../controllers/token.controller";
+import { checkFirebaseUserToken } from "../middlewares/auth.middleware";
 // middlewares
 import { errorHandler } from "../middlewares/express-validator";
 import { IsTokenOwner } from "../middlewares/facebook.middleware";
@@ -14,10 +15,16 @@ tokenRouter.get(
 	[
 		query("access_token").notEmpty().withMessage("token must be provided"),
 		query("owner").notEmpty().withMessage("owner value must be provided"),
-		IsTokenOwner,
 		errorHandler,
+		IsTokenOwner,
 	],
 	generateLongLiveToken
+);
+
+tokenRouter.get(
+	"/token-status",
+	[header("x-auth-firebase").notEmpty(), errorHandler, checkFirebaseUserToken],
+	checkTokenStatus
 );
 
 export default tokenRouter;

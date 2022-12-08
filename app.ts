@@ -1,5 +1,6 @@
 // imports
 import * as dotenv from "dotenv";
+import AuthController from "./models/auth";
 import BucketController from "./models/bucket";
 import FirebaseApp from "./models/firebase";
 dotenv.config();
@@ -11,11 +12,12 @@ import Server from "./models/server";
 const server = new Server();
 server.listen();
 // initialize Firebase app
-const firebaseApp = new FirebaseApp();
-export const app = firebaseApp.getApp();
+export const firebaseApp = new FirebaseApp();
 // init bucket
 export const bucket = new BucketController();
 // init firestore
 export const firestore = new FirestoreController();
+// init auth
+export const auth = new AuthController();
 // scheduler app
 export const scheduler = new PostScheduler();

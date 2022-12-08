@@ -19,3 +19,7 @@ export const generateLongLiveToken = async (req: Request, res: Response) => {
 		return res.status(400).json({ ok: false, msg: "Long lived token generation error" });
 	}
 };
+
+export const checkTokenStatus = (req: Request, res: Response) => {
+	res.json({ ok: true });
+};
