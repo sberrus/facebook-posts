@@ -1,6 +1,6 @@
 // imports
 import { Request, Response } from "express";
-import { getLongLivedToken } from "../helpers/facebookTokens";
+import { getLongLivedToken, isLongLivedTokenValid } from "../helpers/facebookTokens";
 import { firestore } from "../app";
 /**
  * Generate a new Long Lived Token and save it into BD
@@ -36,18 +36,21 @@ export const checkTokenStatus = async (req: Request, res: Response) => {
 		if (user) {
 			const workspace = await firestore.getUserWorkspace(user.uid);
 			if (!workspace) {
-				return res.status(404).json({ ok: false, msg: "workspace not found for this user" });
+				return res.status(404).json({ ok: false, msg: "The token is not valid or not exists!" });
 			}
 
 			longLivedToken = workspace.longLivedToken;
 		}
 
 		// check if workspace have valid longLivedToken
-	} catch (error) {
-		console.log("🚀 ~ file: token.controller.ts:33 ~ checkTokenStatus ~ error", error);
-		res.json({ ok: false, msg: "Error trying to fetch the token status" });
-	}
+		const isValidToken = await isLongLivedTokenValid(longLivedToken);
 
-	//
-	res.json({ ok: true });
+		if (isValidToken) {
+			//
+			res.json({ ok: true, token_status: true });
+		}
+	} catch (error: any) {
+		console.log("🚀 ~ file: token.controller.ts:33 ~ checkTokenStatus ~ error", error);
+		return res.json({ ok: false, msg: "Error trying to fetch the token status" });
+	}
 };
