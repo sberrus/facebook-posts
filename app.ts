@@ -2,6 +2,7 @@
 import * as dotenv from "dotenv";
 import AuthController from "./models/auth";
 import BucketController from "./models/bucket";
+import FacebookController from "./models/facebook";
 import FirebaseApp from "./models/firebase";
 dotenv.config();
 import FirestoreController from "./models/firestore";
@@ -19,5 +20,7 @@ export const bucket = new BucketController();
 export const firestore = new FirestoreController();
 // init auth
 export const auth = new AuthController();
+// init facebook
+export const facebook = new FacebookController();
 // scheduler app
 export const scheduler = new PostScheduler();

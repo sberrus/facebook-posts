@@ -7,8 +7,11 @@ export const checkFirebaseUserToken = async (req: Request, res: Response, next: 
 
 	try {
 		const user = await auth.checkAuthToken(token);
-		// add user property to request
-		req.firebaseUser = user;
+
+		if (user) {
+			// add user property to request
+			req.firebaseUser = user;
+		}
 
 		if (!user) {
 			return res.status(403).json({ ok: false, msg: "token provided is not valid" });

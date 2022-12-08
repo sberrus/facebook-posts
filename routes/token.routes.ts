@@ -1,22 +1,21 @@
 // imports
 import { Router } from "express";
-import { body, header, query } from "express-validator";
+import { body, header } from "express-validator";
 import { checkTokenStatus, generateLongLiveToken } from "../controllers/token.controller";
 import { checkFirebaseUserToken } from "../middlewares/auth.middleware";
 // middlewares
 import { errorHandler } from "../middlewares/express-validator";
-import { IsTokenOwner } from "../middlewares/facebook.middleware";
 
 //
 const tokenRouter = Router();
 
-tokenRouter.get(
+tokenRouter.post(
 	"/generate-llt",
 	[
-		query("access_token").notEmpty().withMessage("token must be provided"),
-		query("owner").notEmpty().withMessage("owner value must be provided"),
+		body("x-auth-facebook").notEmpty().withMessage("facebook token must be provided"),
+		header("x-auth-firebase").notEmpty(),
+		checkFirebaseUserToken,
 		errorHandler,
-		IsTokenOwner,
 	],
 	generateLongLiveToken
 );

@@ -179,6 +179,37 @@ class FirestoreController {
 			throw error;
 		}
 	}
+
+	/**
+	 * Save the long lived token in user's workspace
+	 * @param firebaseUserUid Firebase uid
+	 * @param longLivedToken Facebook long lived token
+	 * @returns
+	 */
+	public async saveWorkspaceToken(firebaseUserUid: string, longLivedToken: string) {
+		try {
+			// get user data
+			const user = await this.getUser(firebaseUserUid);
+			if (!user?.exists) {
+				console.log("🚀 ~ file: firestore.ts:166 ~ FirestoreController ~ getUserWorkspace ~ exists", user?.exists);
+				return;
+			}
+
+			// get firestore workspace user
+			const workspaceUser = user.data();
+
+			// if user exists, save Long lived Token
+			if (workspaceUser) {
+				// find workspace
+				await this.workspacesReference.doc(workspaceUser.workspace).update({
+					longLivedToken: longLivedToken,
+				});
+			}
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:174 ~ FirestoreController ~ getUserWorkspace ~ error", error);
+			throw error;
+		}
+	}
 }
 //
 export default FirestoreController;
