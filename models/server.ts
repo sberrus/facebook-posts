@@ -1,6 +1,8 @@
 // imports
 import bodyParser from "body-parser";
 import express, { Application } from "express";
+import cors from "cors";
+// routes
 import scheduleRouter from "../routes/schedule.routes";
 import assetsRouter from "../routes/assets.routes";
 import tokenRouter from "../routes/token.routes";
@@ -29,6 +31,7 @@ class Server {
 
 	private middlewares() {
 		this.app.use(bodyParser.json());
+		this.app.use(cors());
 	}
 	private routes() {
 		this.app.use(this.apiPaths.schedule, scheduleRouter);
