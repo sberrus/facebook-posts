@@ -65,6 +65,6 @@ export const checkTokenStatus = async (req: Request, res: Response) => {
 		}
 	} catch (error: any) {
 		console.log("🚀 ~ file: token.controller.ts:33 ~ checkTokenStatus ~ error", error);
-		return res.json({ ok: false, msg: "Error trying to fetch the token status" });
+		return res.json({ ok: false, msg: "Error trying to fetch the token status", token_status: false });
 	}
 };
