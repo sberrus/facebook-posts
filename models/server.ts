@@ -6,6 +6,7 @@ import cors from "cors";
 import scheduleRouter from "../routes/schedule.routes";
 import assetsRouter from "../routes/assets.routes";
 import tokenRouter from "../routes/token.routes";
+import workspaceRouter from "../routes/workspace.routes";
 
 class Server {
 	// properties
@@ -17,6 +18,7 @@ class Server {
 		schedule: "/api/schedule",
 		token: "/api/token",
 		assets: "/api/assets",
+		workspace: "/api/workspace",
 	};
 
 	constructor() {
@@ -37,6 +39,7 @@ class Server {
 		this.app.use(this.apiPaths.schedule, scheduleRouter);
 		this.app.use(this.apiPaths.token, tokenRouter);
 		this.app.use(this.apiPaths.assets, assetsRouter);
+		this.app.use(this.apiPaths.workspace, workspaceRouter);
 	}
 
 	listen() {

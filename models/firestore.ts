@@ -6,6 +6,7 @@ import { PostRequestBodyType, JobType } from "../types/jobs";
 /**
  * Firestore controller
  */
+
 class FirestoreController {
 	// firestore instance
 	private db: Firestore;
