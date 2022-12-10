@@ -1,6 +1,6 @@
 // imports
-import { getFirestore, Firestore, CollectionReference } from "firebase-admin/firestore";
-import { firestore } from "../app";
+import { getFirestore, Firestore, CollectionReference, FieldValue } from "firebase-admin/firestore";
+import { PageType } from "../types";
 import { PostRequestBodyType, JobType } from "../types/jobs";
 
 /**
@@ -153,9 +153,34 @@ class FirestoreController {
 	}
 
 	/**
-	 * Get user workspace information by its firebase uid
+	 * Get user workspace information by its firebase uid ** dont try this at home
 	 * @param firebaseUserUid firebase user uid
 	 */
+	public async getUserWorkspaceReference(firebaseUserUid: string) {
+		try {
+			const user = await this.getUser(firebaseUserUid);
+			// check if user exists
+			if (!user?.exists) {
+				console.log("🚀 ~ file: firestore.ts:166 ~ FirestoreController ~ getUserWorkspace ~ exists", user?.exists);
+				return;
+			}
+
+			// get firestore workspace user
+			const workspaceUser = user.data();
+
+			if (workspaceUser) {
+				// find workspace
+				const workspace = await this.workspacesReference.doc(workspaceUser.workspace).get();
+				if (workspace.exists) {
+					return workspace;
+				}
+			}
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:174 ~ FirestoreController ~ getUserWorkspace ~ error", error);
+			throw error;
+		}
+	}
+
 	public async getUserWorkspace(firebaseUserUid: string) {
 		try {
 			const user = await this.getUser(firebaseUserUid);
@@ -209,6 +234,22 @@ class FirestoreController {
 		} catch (error) {
 			console.log("🚀 ~ file: firestore.ts:174 ~ FirestoreController ~ getUserWorkspace ~ error", error);
 			throw error;
+		}
+	}
+
+	public async addPageToUserWorkspace(page: PageType, firebaseUid: string) {
+		// get user workspace reference
+		try {
+			const userWorkspace = await this.getUserWorkspaceReference(firebaseUid);
+			if (userWorkspace) {
+				const userWorkspaceRef = userWorkspace.ref;
+				await userWorkspaceRef.update({
+					linked_pages: FieldValue.arrayUnion(page),
+				});
+			}
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:247 ~ FirestoreController ~ addPageToUserWorkspace ~ error", error);
+			throw new Error("Error adding the page to workspace pages");
 		}
 	}
 }

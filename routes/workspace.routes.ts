@@ -11,10 +11,6 @@ const workspaceRouter = Router();
 
 workspaceRouter.get("/", [checkFirebaseUserToken, errorHandler], getWorkspace);
 workspaceRouter.get("/admin-pages", [checkFirebaseUserToken, errorHandler], getAdminPages);
-workspaceRouter.post(
-	"/add-account",
-	[body("page_id").exists(), checkFirebaseUserToken, errorHandler],
-	addPageToWorkspace
-);
+workspaceRouter.post("/add-page", [body("page_id").exists(), checkFirebaseUserToken, errorHandler], addPageToWorkspace);
 
 export default workspaceRouter;

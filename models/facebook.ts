@@ -2,9 +2,11 @@
 import axios from "axios";
 
 // type
+import { PageType } from "../types/index";
 interface LongLiveTokenResponse {
 	access_token: string;
 }
+
 class FacebookController {
 	private FB_APP_ID: string;
 	private FB_APP_SECRET: string;
@@ -59,6 +61,18 @@ class FacebookController {
 			);
 
 			return fbRes.data.data;
+		} catch (error: any) {
+			throw error.response.data;
+		}
+	}
+
+	public async getPage(pageID: string, token: string): Promise<PageType> {
+		try {
+			const fbRes = await axios(
+				`https://graph.facebook.com/v15.0/${pageID}?fields=name,id,picture&access_token=${token}`
+			);
+
+			return fbRes.data;
 		} catch (error: any) {
 			throw error.response.data;
 		}
