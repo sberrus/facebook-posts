@@ -237,6 +237,9 @@ class FirestoreController {
 		}
 	}
 
+	/**
+	 * Add page to workspace
+	 */
 	public async addPageToUserWorkspace(page: PageType, firebaseUid: string) {
 		// get user workspace reference
 		try {
@@ -250,6 +253,47 @@ class FirestoreController {
 		} catch (error) {
 			console.log("🚀 ~ file: firestore.ts:247 ~ FirestoreController ~ addPageToUserWorkspace ~ error", error);
 			throw new Error("Error adding the page to workspace pages");
+		}
+	}
+
+	/**
+	 * Delete workspace page
+	 */
+	public async deleteWorkspacePage(firebaseUid: string, pageID: string) {
+		let workspacePages: PageType[] = [];
+		let workspaceRef;
+		// Get workspace reference
+		try {
+			workspaceRef = await this.getUserWorkspaceReference(firebaseUid);
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:268 ~ FirestoreController ~ deleteWorkspacePage ~ error", error);
+			throw new Error("Error fetching user workspace");
+		}
+
+		// Get current pages
+		try {
+			if (workspaceRef) {
+				const document = await workspaceRef.ref.get();
+				const workspace = document.data();
+				if (workspace) {
+					workspacePages = workspace.linked_pages;
+				}
+			}
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:282 ~ FirestoreController ~ deleteWorkspacePage ~ error", error);
+			throw new Error("Error getting workspace ");
+		}
+
+		// Update pages
+		if (workspaceRef && workspacePages) {
+			try {
+				await workspaceRef.ref.update({
+					linked_pages: workspacePages.filter((page) => page.id !== pageID),
+				});
+			} catch (error) {
+				console.log("🚀 ~ file: firestore.ts:291 ~ FirestoreController ~ deleteWorkspacePage ~ error", error);
+				throw new Error("Error updating workspace pages");
+			}
 		}
 	}
 }

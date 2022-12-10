@@ -104,3 +104,22 @@ export const getAdminPages = async (req: Request, res: Response) => {
 		}
 	}
 };
+
+export const deleteWorkspacePage = async (req: Request, res: Response) => {
+	// get user uid
+	const user = req.firebaseUser;
+	// get page uid to delete
+	const pageID = req.body.page_id;
+
+	if (user && pageID) {
+		try {
+			await firestore.deleteWorkspacePage(user.uid, pageID);
+			return res.json({ ok: true, msg: "Page removed successfully!" });
+		} catch (error) {
+			console.log("🚀 ~ file: workspace.controller.ts:117 ~ deleteWorkspacePage ~ error", error);
+			return res.status(500).json({ ok: false, msg: "Error removing page from workspace pages" });
+		}
+	}
+
+	res.status(500).json({ ok: false, msg: "Error removing page... good luck :) <3" });
+};
