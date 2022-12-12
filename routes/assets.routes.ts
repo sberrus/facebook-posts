@@ -1,18 +1,21 @@
 // imports
 import { Router } from "express";
-import processFile, { checkIfWorkspaceExists } from "../middlewares/upload";
-import { getAssetsList, uploadAssetsToFirebase } from "../controllers/assets.controller";
-import { query } from "express-validator";
+import { header } from "express-validator";
 import { errorHandler } from "../middlewares/express-validator";
+// middlewares
+import { checkFirebaseUserToken } from "../middlewares/auth.middleware";
+import processFileMiddleware from "../middlewares/upload";
+// controller
+import { getAssetsList, uploadAssetsToFirebase } from "../controllers/assets.controller";
 
 //
 const testRouter = Router();
 
+testRouter.get("/", [checkFirebaseUserToken], getAssetsList);
 testRouter.post(
-	"/",
-	[query("workspace").notEmpty().custom(checkIfWorkspaceExists), processFile, errorHandler],
+	"/upload",
+	[header("x-auth-firebase"), errorHandler, processFileMiddleware, checkFirebaseUserToken],
 	uploadAssetsToFirebase
 );
-testRouter.get("/", processFile, getAssetsList);
 
 export default testRouter;

@@ -1,5 +1,4 @@
 import { Request } from "express";
-import { format } from "util";
 import { getStorage } from "firebase-admin/storage";
 
 /**
@@ -17,43 +16,43 @@ class BucketController {
 	/**
 	 * Upload file to firestore
 	 */
-	public async uploadFile(req: Request) {
-		try {
-			// Create a new blob in the bucket and upload the file data.
-			const blob = this.bucket.file(req.file?.originalname!);
-			const blobStream = blob.createWriteStream({
-				resumable: false,
-			});
+	public async uploadFile(req: Request, workspaceID: string) {
+		if (req.file) {
+			try {
+				// Create a new blob in the bucket and upload the file data.
+				const blob = this.bucket.file(`${workspaceID}/${req.file.originalname}`);
+				const blobStream = blob.createWriteStream({
+					resumable: false,
+				});
 
-			blobStream.on("error", (err) => {
-				throw err.message;
-			});
+				blobStream.on("error", (err) => {
+					console.log(err);
+				});
 
-			blobStream.on("finish", async () => {
-				try {
-					// Make the file public
-					await this.bucket.file(req.file?.originalname!).makePublic();
-				} catch (err) {
-					throw {
-						message: `Uploaded the file successfully: ${req.file?.originalname}, but public access is denied!`,
-					};
-				}
-			});
+				blobStream.on("finish", async () => {
+					if (req.file) {
+						try {
+							// Make the file public
+							await this.bucket.file(`${workspaceID}/${req.file.originalname}`).makePublic();
+						} catch (err) {
+							console.log(err);
+						}
+					}
+				});
 
-			blobStream.end(req.file?.buffer);
-		} catch (err) {
-			throw {
-				message: `Could not upload the file: ${req.file?.originalname}. ${err}`,
-			};
+				blobStream.end(req.file.buffer);
+			} catch (err) {
+				throw new Error(`Could not upload the file: ${req.file?.originalname}. ${err}`);
+			}
 		}
 	}
 
 	/**
 	 * Get a list of all files
 	 */
-	public async getFilesList() {
+	public async getWorkspaceFiles(workspaceID: string) {
 		try {
-			const [files] = await this.bucket.getFiles();
+			const [files] = await this.bucket.getFiles({ prefix: workspaceID });
 
 			return files.map((file) => {
 				return {
