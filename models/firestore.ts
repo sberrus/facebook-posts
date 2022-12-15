@@ -1,7 +1,9 @@
 // imports
 import { getFirestore, Firestore, CollectionReference, FieldValue } from "firebase-admin/firestore";
+// types
 import { PageType } from "../types";
 import { PostRequestBodyType, JobType } from "../types/jobs";
+import { WorkspaceType } from "../types/workspace";
 
 /**
  * Firestore controller
@@ -197,7 +199,7 @@ class FirestoreController {
 				// find workspace
 				const workspace = await this.workspacesReference.doc(workspaceUser.workspace).get();
 				if (workspace.exists) {
-					return workspace.data();
+					return workspace.data() as WorkspaceType;
 				}
 			}
 		} catch (error) {

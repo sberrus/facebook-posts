@@ -55,13 +55,12 @@ export const checkTokenStatus = async (req: Request, res: Response) => {
 
 			longLivedToken = workspace.longLivedToken;
 		}
-
-		// check if workspace have valid longLivedToken
-		const isValidToken = await isLongLivedTokenValid(longLivedToken);
-
-		if (isValidToken) {
-			//
-			res.json({ ok: true, token_status: true });
+		if (longLivedToken) {
+			const isValidToken = await isLongLivedTokenValid(longLivedToken);
+			// check if workspace have valid longLivedToken
+			if (isValidToken) {
+				res.json({ ok: true, token_status: true });
+			}
 		}
 	} catch (error: any) {
 		console.log("🚀 ~ file: token.controller.ts:33 ~ checkTokenStatus ~ error", error);

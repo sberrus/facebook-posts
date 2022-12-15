@@ -7,6 +7,7 @@ import scheduleRouter from "../routes/schedule.routes";
 import assetsRouter from "../routes/assets.routes";
 import tokenRouter from "../routes/token.routes";
 import workspaceRouter from "../routes/workspace.routes";
+import groupsRouter from "../routes/groups.routes";
 
 class Server {
 	// properties
@@ -19,6 +20,7 @@ class Server {
 		token: "/api/token",
 		assets: "/api/assets",
 		workspace: "/api/workspace",
+		groups: "/api/groups",
 	};
 
 	constructor() {
@@ -40,6 +42,7 @@ class Server {
 		this.app.use(this.apiPaths.token, tokenRouter);
 		this.app.use(this.apiPaths.assets, assetsRouter);
 		this.app.use(this.apiPaths.workspace, workspaceRouter);
+		this.app.use(this.apiPaths.groups, groupsRouter);
 	}
 
 	listen() {

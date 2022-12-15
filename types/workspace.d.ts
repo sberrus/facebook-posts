@@ -4,12 +4,14 @@ export interface WorkspaceType {
 	linked_groups: GroupType[];
 	linked_pages: PageType[];
 	managers: string[];
+	longLivedToken?: string;
 }
 
 // Group data type
 export interface GroupType {
 	name: string;
 	id: string;
+	administrator: string;
 	picture: {
 		data: {
 			height: number;

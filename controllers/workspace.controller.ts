@@ -45,7 +45,7 @@ export const addPageToWorkspace = async (req: Request, res: Response) => {
 		}
 	}
 	// get page data
-	if (userWorkspace) {
+	if (userWorkspace?.longLivedToken) {
 		try {
 			pageData = await facebook.getPage(pageID, userWorkspace.longLivedToken);
 		} catch (error) {
@@ -93,7 +93,7 @@ export const getAdminPages = async (req: Request, res: Response) => {
 		}
 	}
 
-	if (workspace) {
+	if (workspace?.longLivedToken) {
 		try {
 			const pagesRes = await facebook.getUserPages(workspace.longLivedToken);
 
