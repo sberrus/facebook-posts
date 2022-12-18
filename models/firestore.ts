@@ -1,8 +1,8 @@
 // imports
 import { getFirestore, Firestore, CollectionReference, FieldValue } from "firebase-admin/firestore";
 // types
-import { PageType } from "../types";
-import { PostRequestBodyType, JobType } from "../types/jobs";
+import { FacebookPageResponseType } from "../types";
+import { JobType } from "../types/jobs";
 import { WorkspaceType } from "../types/workspace";
 
 /**
@@ -14,7 +14,6 @@ class FirestoreController {
 	private db: Firestore;
 	// firestore jobs reference
 	private jobsReference: CollectionReference<FirebaseFirestore.DocumentData>;
-	private tokensReference: CollectionReference<FirebaseFirestore.DocumentData>;
 	private workspacesReference: CollectionReference<FirebaseFirestore.DocumentData>;
 	private usersReference: CollectionReference<FirebaseFirestore.DocumentData>;
 
@@ -24,7 +23,6 @@ class FirestoreController {
 		this.db = getFirestore();
 		// get firestore references
 		this.jobsReference = this.db.collection("jobs");
-		this.tokensReference = this.db.collection("tokens");
 		this.workspacesReference = this.db.collection("workspaces");
 		this.usersReference = this.db.collection("users");
 	}
@@ -46,37 +44,37 @@ class FirestoreController {
 	/**
 	 * Insert new document with job's information
 	 */
-	public async createJob(
-		{ id }: JobType,
-		{
-			title = "",
-			message = "",
-			type = "text",
-			url = "",
-			emotion = "",
-			asset_src = "",
-			location = "",
-			schedule_config,
-		}: PostRequestBodyType
-	) {
-		try {
-			await this.jobsReference.add({
-				id,
-				title,
-				message,
-				type,
-				url,
-				emotion,
-				asset_src,
-				location,
-				schedule_config,
-				job_status: "programmed",
-			});
-		} catch (error) {
-			console.log("🚀 ~ file: firestore.ts:70 ~ FirestoreController ~ error", error);
-			throw new Error("Error when adding doc to firestore");
-		}
-	}
+	// public async createJob(
+	// 	{ id }: JobType,
+	// 	{
+	// 		title = "",
+	// 		message = "",
+	// 		type = "text",
+	// 		url = "",
+	// 		emotion = "",
+	// 		asset_src = "",
+	// 		location = "",
+	// 		schedule_config,
+	// 	}: RequestDataType
+	// ) {
+	// 	try {
+	// 		await this.jobsReference.add({
+	// 			id,
+	// 			title,
+	// 			message,
+	// 			type,
+	// 			url,
+	// 			emotion,
+	// 			asset_src,
+	// 			location,
+	// 			schedule_config,
+	// 			job_status: "programmed",
+	// 		});
+	// 	} catch (error) {
+	// 		console.log("🚀 ~ file: firestore.ts:70 ~ FirestoreController ~ error", error);
+	// 		throw new Error("Error when adding doc to firestore");
+	// 	}
+	// }
 
 	/**
 	 * Change the job's status in firestore document
@@ -102,21 +100,16 @@ class FirestoreController {
 	}
 
 	/**
-	 * Save long live token into workspace collection
+	 * Retrieves the LongLivedToken for the given workspaceID
+	 * @param workspaceID workspace collection document id
+	 * @returns
 	 */
-	public async saveLongLivedToken(owner: string, token: string) {
+	public async getLongLivedToken(workspaceID: string) {
 		try {
-			this.tokensReference.doc(owner).set({ LLT: token });
-		} catch (error) {
-			console.log("🚀 ~ file: firestore.ts:103 ~ FirestoreController ~ saveLongLivedToken ~ error", error);
-			throw error;
-		}
-	}
+			const res = await this.workspacesReference.doc(workspaceID).get();
+			const workspace = res.data() as WorkspaceType;
 
-	public async getLongLivedToken(owner: string) {
-		try {
-			const res = await this.tokensReference.doc(owner).get();
-			return res.data()?.LLT;
+			return workspace.longLivedToken;
 		} catch (error) {
 			console.log("🚀 ~ file: firestore.ts:111 ~ FirestoreController ~ getLongLivedToken ~ error", error);
 			throw error;
@@ -242,7 +235,7 @@ class FirestoreController {
 	/**
 	 * Add page to workspace
 	 */
-	public async addPageToUserWorkspace(page: PageType, firebaseUid: string) {
+	public async addPageToUserWorkspace(page: FacebookPageResponseType, firebaseUid: string) {
 		// get user workspace reference
 		try {
 			const userWorkspace = await this.getUserWorkspaceReference(firebaseUid);
@@ -262,7 +255,7 @@ class FirestoreController {
 	 * Delete workspace page
 	 */
 	public async deleteWorkspacePage(firebaseUid: string, pageID: string) {
-		let workspacePages: PageType[] = [];
+		let workspacePages: FacebookPageResponseType[] = [];
 		let workspaceRef;
 		// Get workspace reference
 		try {

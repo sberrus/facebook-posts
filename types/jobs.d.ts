@@ -1,30 +1,47 @@
 // imports
 import schedule from "node-schedule";
+import { GroupType } from "./workspace";
 
-export interface ScheduleConfigType {
-	day: number;
-	time?: {
-		hour?: number;
-		minute?: number;
-	};
+// sharing groups model
+export interface GroupConfigType {
+	group: GroupType;
+	schedule: ScheduleConfigType;
 }
-// request body
-export interface PostRequestBodyType {
-	owner: string;
+
+// post groups model
+export interface PageConfigType {
 	page_id: string;
-	title: string;
 	message: string;
 	type: "text" | "img" | "video";
-	sharing_groups_ids: string[];
-	url?: string;
 	emotion?: string;
 	asset_src?: string;
 	location?: string;
-	schedule_config?: ScheduleConfigType;
 	job_status?: "programmed" | "draft" | "trash";
+	schedule_config?: ScheduleConfigType;
+}
+
+// post model
+export interface PostDataType {
+	title: string;
+	page_post: PageConfigType;
+	sharing_groups: GroupConfigType[];
+}
+
+// schedule config model
+export interface ScheduleConfigType {
+	date: string;
+	hour: string;
+	minute: string;
 }
 
 export interface JobType {
+	workspace: string;
 	id: string;
 	job: schedule.Job;
+}
+
+// post published data
+export interface PostPublishedType {
+	id: string;
+	permalink_url: string;
 }

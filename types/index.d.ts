@@ -1,6 +1,6 @@
 /** WORKSPACE TYPES */
 
-export interface PageType {
+export interface FacebookPageResponseType {
 	id: string;
 	name: string;
 	picture: {
@@ -11,4 +11,8 @@ export interface PageType {
 			url: string;
 		};
 	};
+}
+
+export interface WorkspaceAdminPageData extends FacebookPageResponseType {
+	page_long_lived_token: string;
 }

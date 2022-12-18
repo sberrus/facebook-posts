@@ -54,10 +54,7 @@ export const addPageToWorkspace = async (req: Request, res: Response) => {
 		}
 	}
 
-	/**
-	 * TODO CHECK IF PAGE ALREADY EXISTS IN WORKSPACE PAGES
-	 */
-	// check if page already exists in workspace pages
+	// TODO: CHECK IF PAGE ALREADY EXISTS IN WORKSPACE PAGES
 
 	// save data in BD
 	if (pageData && user) {

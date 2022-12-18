@@ -1,9 +1,8 @@
 // imports
 import schedule from "node-schedule";
 import { v4 as uuidv4 } from "uuid";
-import { firestore } from "../app";
-import { createNewPagePost } from "../helpers/facebookPosts";
-import { JobType, PostRequestBodyType } from "../types/jobs";
+import { facebook, firestore } from "../app";
+import { JobType, PageConfigType, GroupConfigType } from "../types/jobs";
 
 /**
  * Scheduler app.
@@ -17,37 +16,75 @@ class PostScheduler {
 	private _jobsCollection: JobType[] = [];
 
 	constructor() {
-		this.recoverStoredJobs();
+		// this.recoverStoredJobs();
 	}
+
 	/**
-	 * Program a job add it in the collection and save it in firestore.
+	 * Program a new job and return job reference
 	 */
-	public async addJob(postBody: PostRequestBodyType): Promise<JobType> {
+	public async addPagePostJob(page_post: PageConfigType, workspaceID: string): Promise<JobType> {
 		// assign id
 		const id = uuidv4();
+		// job
+		let job;
 
+		/** DEBUG */
 		try {
-			await createNewPagePost(postBody);
+			const postPublished = await facebook.createNewPagePost(page_post, workspaceID);
 		} catch (error) {
-			console.log("🚀 ~ file: scheduler.ts:32 ~ PostScheduler ~ addJob ~ error", error);
-			throw new Error("Error trying to create a post");
+			console.log("🚀 ~ file: scheduler.ts:35 ~ PostScheduler ~ addPagePostJob ~ error", error);
 		}
 
-		//
-		const job = schedule.scheduleJob(
-			{
-				second: 0,
-			},
-			() => {
-				//Create new posts
-			}
-		);
-
+		// configure schedule
+		if (page_post.schedule_config && page_post.schedule_config.hour && page_post.schedule_config.minute) {
+			const rule = {
+				dayOfWeek: page_post.schedule_config.date,
+				hour: page_post.schedule_config.hour,
+				minute: page_post.schedule_config.minute,
+			};
+			job = schedule.scheduleJob(rule, async () => {
+				// create a new facebook post
+				try {
+					const postPublished = await facebook.createNewPagePost(page_post, workspaceID);
+					console.log(postPublished);
+				} catch (error) {
+					console.log("🚀 ~ file: scheduler.ts:44 ~ PostScheduler ~ job=schedule.scheduleJob ~ error", error);
+				}
+			});
+		}
+		// check if job created successfully
+		if (!job) {
+			throw new Error("Error creating new job in scheduler");
+		}
 		// add job to collection
-		this._jobsCollection.push({ id, job });
+		this._jobsCollection.push({ id, job, workspace: workspaceID });
 
-		// return id
-		return { id, job };
+		// return job data
+		return { id, job, workspace: workspaceID };
+	}
+
+	/**
+	 * Create a job for each group job config passed from frontend
+	 * @param sharing_groups group data used to create the jobs for each group
+	 */
+	public addGroupsPosts(sharing_groups: GroupConfigType[]) {
+		// create a job for each group
+
+		sharing_groups.forEach((groupConfig) => {
+			// own group logic
+			if (groupConfig.group.administrator) {
+				const rule = {
+					dayOfWeek: groupConfig.schedule.date,
+					hour: groupConfig.schedule.hour,
+					minute: groupConfig.schedule.minute,
+				};
+				schedule.scheduleJob(rule, () => {
+					// get last post_scope post published
+					console.log(groupConfig);
+					// emit dispatcher to chrome extension
+				});
+			}
+		});
 	}
 
 	/**
@@ -108,7 +145,7 @@ class PostScheduler {
 					}
 				);
 				// add job to collection
-				this._jobsCollection.push({ id: _job.id, job });
+				this._jobsCollection.push({ id: _job.id, job, workspace: _job.workspace });
 			});
 
 		console.log("jobs restored succesfully!");

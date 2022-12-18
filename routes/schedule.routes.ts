@@ -1,34 +1,41 @@
 // imports
 import { Router } from "express";
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 // scheduler controller
 import { addJob, deleteProgrammedJob, getProgrammedJobs } from "../controllers/schedule.controller";
 // custom validators
-import { checkIfJobExists, checkScheduleConfig, isValidType } from "../middlewares/jobs.middleware";
+import {
+	// checkIfJobExists,
+	//  checkScheduleConfig,
+	validateAsset,
+} from "../middlewares/jobs.middleware";
 // middlewares
 import { errorHandler } from "../middlewares/express-validator";
+import { checkFirebaseUserToken } from "../middlewares/auth.middleware";
 
 //
 const scheduleRouter = Router();
 
 // create a new job and save it into bd
 scheduleRouter.post(
-	"/schedule-post",
+	"/",
 	[
-		body("owner").notEmpty(),
-		body("page_id").notEmpty(),
-		body("sharing_groups_ids").notEmpty(),
-		body("title").notEmpty(),
-		body("message").notEmpty().withMessage("Message must be provided"),
-		body("type").custom(isValidType),
-		body("schedule_config").custom(checkScheduleConfig),
+		body("title").notEmpty().withMessage("Title must be provided"),
+		body("page_post.message").notEmpty().withMessage("Message must be provided"),
+		body("page_post.type").notEmpty().custom(validateAsset),
+		body("page_post.schedule_config.date").notEmpty().isNumeric(),
+		body("page_post.schedule_config.hour").notEmpty().isNumeric(),
+		body("page_post.schedule_config.minute").notEmpty().isNumeric(),
 		errorHandler,
+		checkFirebaseUserToken,
 	],
 	addJob
 );
-// get all jobs
-scheduleRouter.get("/schedule-post/", getProgrammedJobs);
 
-scheduleRouter.delete("/schedule-post/:id", [param("id").custom(checkIfJobExists), errorHandler], deleteProgrammedJob);
+// get all jobs
+// scheduleRouter.get("/", getProgrammedJobs);
+
+// get single job data
+// scheduleRouter.delete("/:id", [param("id").custom(checkIfJobExists), errorHandler], deleteProgrammedJob);
 
 export default scheduleRouter;
