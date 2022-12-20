@@ -4,7 +4,7 @@ import { firestore } from "../app";
 
 // type
 import { FacebookPageResponseType } from "../types/index";
-import { PageConfigType, PostDataType } from "../types/jobs";
+import { PageConfigType, PostScopeType, PostPublishedType } from "../types/jobs";
 import { GroupType } from "../types/workspace";
 interface LongLiveTokenResponse {
 	access_token: string;
@@ -94,7 +94,9 @@ class FacebookController {
 
 			return fbRes.data.access_token;
 		} catch (error: any) {
-			throw error.response.data;
+			console.log("🚀 ~ file: facebook.ts:97 ~ FacebookController ~ getPageToken ~ error", error.response.data);
+
+			throw new Error("Facebook Error: Couldn`t get page token");
 		}
 	}
 
@@ -116,37 +118,26 @@ class FacebookController {
 	 * @param workspaceID user's workspace document id
 	 */
 	public createNewPagePost = async (page_post: PageConfigType, workspaceID: string) => {
-		let admin_long_lived_token;
 		let page_token;
 		let post_published;
 
-		// get workspace admin longLivedToken
 		try {
-			admin_long_lived_token = await firestore.getLongLivedToken(workspaceID);
-		} catch (error) {
-			console.log("🚀 ~ file: facebook.ts:109 ~ FacebookController ~ createNewPagePost= ~ error", error);
-			throw new Error("Couldn't fetch long lived token from firebase collection");
-		}
+			// get workspace admin longLivedToken
+			const admin_long_lived_token = await firestore.getWorkspaceLongLivedToken(workspaceID);
 
-		// get page token
-		if (admin_long_lived_token) {
-			try {
+			// get page token
+			if (admin_long_lived_token) {
 				page_token = await this.getPageToken(page_post.page_id, admin_long_lived_token);
-			} catch (error) {
-				console.log("🚀 ~ file: facebook.ts:137 ~ FacebookController ~ createNewPagePost= ~ error", error);
-				throw new Error("Couldn't get page token");
 			}
-		}
 
-		// check post type
-		if (page_post.type === "text") {
-			try {
+			// check post type
+			if (page_post.type === "text") {
 				post_published = await this.createTextPost(page_post.message, page_token);
-			} catch (error) {
-				console.log("🚀 ~ file: facebook.ts:146 ~ FacebookController ~ createNewPagePost= ~ error", error);
 			}
+		} catch (error) {
+			console.log("🚀 ~ file: facebook.ts:142 ~ FacebookController ~ createNewPagePost= ~ error", error);
+			throw new Error("Facebook Error: Couldn`t create new page post");
 		}
-
 		// if all ok
 		return post_published;
 	};
@@ -161,10 +152,41 @@ class FacebookController {
 				`https://graph.facebook.com/v15.0/me/feed?message=${message}&fields=permalink_url,id&access_token=${page_token}`
 			);
 
-			return res.data as PostDataType;
+			return res.data as PostPublishedType;
 		} catch (error: any) {
-			console.log("🚀 ~ file: facebook.ts:131 ~ FacebookController ~ createTextPost ~ error", error);
-			throw error.response.data;
+			console.log("🚀 ~ file: facebook.ts:131 ~ FacebookController ~ createTextPost ~ error", error.response.data);
+			throw new Error("Facebook Error: Fail creating new Text Post");
+		}
+	}
+
+	/**
+	 * Share in specified group owned by admin the last post page published in
+	 * post scope
+	 */
+	public async shareLastPostInGroups(post_scope_id: string, groupID: string) {
+		try {
+			// get post_scope reference
+			const postScopeReference = await firestore.getPostScopeReference(post_scope_id);
+			const { last_post_published, workspaceID } = postScopeReference.data() as PostScopeType;
+
+			// check if there is any post published
+			if (!last_post_published) {
+				console.log("there is any post published yet!");
+				return;
+			}
+
+			//  publish the last post in given group
+			const longLivedToken = await firestore.getWorkspaceLongLivedToken(workspaceID);
+
+			//
+			if (longLivedToken && last_post_published) {
+				return await axios.post(
+					`https://graph.facebook.com/v15.0/${groupID}/feed?link=${last_post_published.permalink_url}&access_token=${longLivedToken}`
+				);
+			}
+		} catch (error) {
+			console.log("🚀 ~ file: facebook.ts:171 ~ FacebookController ~ shareLastPostInGroups ~ error", error);
+			throw new Error("Facebook Error: Couldn't share the last post published in group");
 		}
 	}
 }

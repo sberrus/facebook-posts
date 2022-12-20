@@ -2,7 +2,7 @@
 import { getFirestore, Firestore, CollectionReference, FieldValue } from "firebase-admin/firestore";
 // types
 import { FacebookPageResponseType } from "../types";
-import { JobType } from "../types/jobs";
+import { PostDataType, PostPublishedType, PostScopePageJobType, PostScopeType } from "../types/jobs";
 import { WorkspaceType } from "../types/workspace";
 
 /**
@@ -16,6 +16,7 @@ class FirestoreController {
 	private jobsReference: CollectionReference<FirebaseFirestore.DocumentData>;
 	private workspacesReference: CollectionReference<FirebaseFirestore.DocumentData>;
 	private usersReference: CollectionReference<FirebaseFirestore.DocumentData>;
+	private postScopeReference: CollectionReference<FirebaseFirestore.DocumentData>;
 
 	//
 	constructor() {
@@ -25,6 +26,7 @@ class FirestoreController {
 		this.jobsReference = this.db.collection("jobs");
 		this.workspacesReference = this.db.collection("workspaces");
 		this.usersReference = this.db.collection("users");
+		this.postScopeReference = this.db.collection("post_scope");
 	}
 
 	/**
@@ -104,7 +106,7 @@ class FirestoreController {
 	 * @param workspaceID workspace collection document id
 	 * @returns
 	 */
-	public async getLongLivedToken(workspaceID: string) {
+	public async getWorkspaceLongLivedToken(workspaceID: string) {
 		try {
 			const res = await this.workspacesReference.doc(workspaceID).get();
 			const workspace = res.data() as WorkspaceType;
@@ -112,7 +114,7 @@ class FirestoreController {
 			return workspace.longLivedToken;
 		} catch (error) {
 			console.log("🚀 ~ file: firestore.ts:111 ~ FirestoreController ~ getLongLivedToken ~ error", error);
-			throw error;
+			throw new Error("Firestore error: Couldn`t get longLivedToken");
 		}
 	}
 
@@ -156,8 +158,7 @@ class FirestoreController {
 			const user = await this.getUser(firebaseUserUid);
 			// check if user exists
 			if (!user?.exists) {
-				console.log("🚀 ~ file: firestore.ts:166 ~ FirestoreController ~ getUserWorkspace ~ exists", user?.exists);
-				return;
+				throw new Error("Firestore error: There is not user in users collection");
 			}
 
 			// get firestore workspace user
@@ -289,6 +290,70 @@ class FirestoreController {
 				console.log("🚀 ~ file: firestore.ts:291 ~ FirestoreController ~ deleteWorkspacePage ~ error", error);
 				throw new Error("Error updating workspace pages");
 			}
+		}
+	}
+
+	/**
+	 * Create a new post_scope
+	 * @param workspaceID workspace document id
+	 */
+	public async createNewPostScope(body: PostDataType, workspaceID: string) {
+		try {
+			const postScope = {
+				title: body.title,
+				workspaceID,
+				groups: {
+					owned: [],
+					external: [],
+				},
+				post_scope_status: true,
+			};
+
+			const res = await this.postScopeReference.add(postScope);
+			return res;
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:301 ~ FirestoreController ~ createNewPostScope ~ error", error);
+			throw new Error("Firebase Error: error creating new post_scope document");
+		}
+	}
+
+	/**
+	 * retrieves the post_scope document reference given its document id
+	 * @param post_scope_id post_scope document id.
+	 */
+	public async getPostScopeReference(post_scope_id: string) {
+		try {
+			const postScopeReference = await this.postScopeReference.doc(post_scope_id).get();
+
+			return postScopeReference;
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:333 ~ FirestoreController ~ getPostScopeReference ~ error", error);
+			throw new Error("Firebase Error: Error fetching post_scope reference");
+		}
+	}
+
+	/**
+	 * Updates the last post published for the given post_scope_id
+	 */
+	public async updateLastPostPublished(post_scope_id: string, last_post_published: PostPublishedType) {
+		try {
+			await this.postScopeReference.doc(post_scope_id).update({
+				last_post_published,
+			});
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:346 ~ FirestoreController ~ updateLastPostPublished ~ error", error);
+			throw new Error("Firestore Error: Coudln't update post_scope last_post_published");
+		}
+	}
+
+	public async updatePagePostConfig(post_scope_id: string, page_post_job: PostScopePageJobType) {
+		try {
+			await this.postScopeReference.doc(post_scope_id).update({
+				page_post_job,
+			});
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:346 ~ FirestoreController ~ updateLastPostPublished ~ error", error);
+			throw new Error("Firestore Error: Coudln't update post_scope last_post_published");
 		}
 	}
 }

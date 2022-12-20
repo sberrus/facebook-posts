@@ -4,7 +4,7 @@ export interface WorkspaceType {
 	linked_groups: GroupType[];
 	linked_pages: PageType[];
 	managers: string[];
-	longLivedToken?: string;
+	longLivedToken?: string; //sensible
 }
 
 // Group data type

@@ -16,37 +16,38 @@ export const addJob = async (req: Request, res: Response) => {
 	const body = req.body as PostDataType;
 	// get workspace ID
 	let workspaceID: string | undefined;
-	// get workspace
-	if (user) {
-		try {
+
+	//
+	try {
+		// get user workspace
+		if (user) {
 			const userWorkspace = await firestore.getUserWorkspaceReference(user.uid);
 			if (userWorkspace) {
 				workspaceID = userWorkspace.id;
 			}
-		} catch (error) {
-			console.log("🚀 ~ file: schedule.controller.ts:27 ~ addJob ~ error", error);
-			return res.status(500).json({ ok: false, msg: "Server error" });
-		}
-	}
-
-	if (workspaceID) {
-		// create a new job post
-		try {
-			const pagePostJob = scheduler.addPagePostJob(body.page_post, workspaceID);
-			// job created
-			return res.json({ ok: true, msg: "job created successfully!" });
-		} catch (error) {
-			console.log("🚀 ~ file: schedule.controller.ts:41 ~ addJob ~ error", error);
-			return res.status(500).json({ ok: false, msg: error });
 		}
 
-		// // create groups jobs
-		// if (body.sharing_groups.length > 0) {
-		// 	const groupsJobs = scheduler.addGroupsPosts(body.sharing_groups);
-		// }
-	}
+		if (workspaceID) {
+			/** Jobs creation */
 
-	res.status(500).json({ ok: false, msg: "Error in server" });
+			// create a new post scope
+			const postScopeReference = await firestore.createNewPostScope(body, workspaceID);
+
+			// create page post job
+			const pagePostJob = scheduler.createPagePostJob(body.page_post, workspaceID, postScopeReference.id);
+
+			// update page_post_config
+			firestore.updatePagePostConfig(postScopeReference.id, pagePostJob);
+
+			// create groups to share jobs
+			const groupsShareJobs = scheduler.createGroupPosts(body.sharing_groups, postScopeReference.id);
+		}
+
+		return res.json({ ok: true, msg: "job created successfully!" });
+	} catch (error) {
+		console.log("🚀 ~ file: schedule.controller.ts:44 ~ addJob ~ error", error);
+		res.status(500).json({ ok: false, msg: "Server error, Couldn't create the jobs successfully" });
+	}
 };
 
 export const getProgrammedJobs = (req: Request, res: Response) => {

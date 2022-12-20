@@ -1,6 +1,6 @@
 // imports
 import { Router } from "express";
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 // scheduler controller
 import { addJob, deleteProgrammedJob, getProgrammedJobs } from "../controllers/schedule.controller";
 // custom validators
@@ -33,9 +33,9 @@ scheduleRouter.post(
 );
 
 // get all jobs
-// scheduleRouter.get("/", getProgrammedJobs);
+scheduleRouter.get("/", getProgrammedJobs);
 
 // get single job data
-// scheduleRouter.delete("/:id", [param("id").custom(checkIfJobExists), errorHandler], deleteProgrammedJob);
+scheduleRouter.delete("/:id", [param("id").notEmpty(), errorHandler], deleteProgrammedJob);
 
 export default scheduleRouter;

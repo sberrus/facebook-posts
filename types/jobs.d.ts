@@ -1,6 +1,6 @@
 // imports
 import schedule from "node-schedule";
-import { GroupType } from "./workspace";
+import { GroupType, PageType } from "./workspace";
 
 // sharing groups model
 export interface GroupConfigType {
@@ -10,7 +10,7 @@ export interface GroupConfigType {
 
 // post groups model
 export interface PageConfigType {
-	page_id: string;
+	page_id: string; // fb page id where to publish
 	message: string;
 	type: "text" | "img" | "video";
 	emotion?: string;
@@ -44,4 +44,25 @@ export interface JobType {
 export interface PostPublishedType {
 	id: string;
 	permalink_url: string;
+}
+
+/** post_scope model */
+export interface PostScopeType {
+	title: string;
+	last_post_published: PostPublishedType | undefined;
+	page_post_job: PostScopePageJobType | undefined;
+	workspaceID: string;
+	groups: {
+		owned: PostScopeGroupJobType[];
+		external: PostScopeGroupJobType[];
+	};
+	post_scope_status: boolean;
+}
+
+interface PostScopePageJobType extends PageConfigType {
+	job_id: string;
+}
+
+interface PostScopeGroupJobType extends GroupType {
+	job_id: string;
 }

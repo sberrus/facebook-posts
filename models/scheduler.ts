@@ -2,38 +2,35 @@
 import schedule from "node-schedule";
 import { v4 as uuidv4 } from "uuid";
 import { facebook, firestore } from "../app";
-import { JobType, PageConfigType, GroupConfigType } from "../types/jobs";
+import { JobType, PageConfigType, GroupConfigType, PostScopePageJobType } from "../types/jobs";
 
 /**
  * Scheduler app.
  * Facebook post scheduling app. Allow to schedule facebook post and controls the system and
  * checks if the system is working.
  */
-class PostScheduler {
+class Scheduler {
 	/**
 	 * Collection of all the jobs programmed.
 	 */
-	private _jobsCollection: JobType[] = [];
+	private pageJobsCollection: JobType[] = [];
+	private groupJobsCollection: JobType[] = [];
 
 	constructor() {
 		// this.recoverStoredJobs();
 	}
 
 	/**
-	 * Program a new job and return job reference
+	 * Program a new job and return job reference with the page_published
 	 */
-	public async addPagePostJob(page_post: PageConfigType, workspaceID: string): Promise<JobType> {
+	public createPagePostJob(
+		page_post: PageConfigType,
+		workspaceID: string,
+		post_scope_id: string
+	): PostScopePageJobType {
 		// assign id
 		const id = uuidv4();
-		// job
 		let job;
-
-		/** DEBUG */
-		try {
-			const postPublished = await facebook.createNewPagePost(page_post, workspaceID);
-		} catch (error) {
-			console.log("🚀 ~ file: scheduler.ts:35 ~ PostScheduler ~ addPagePostJob ~ error", error);
-		}
 
 		// configure schedule
 		if (page_post.schedule_config && page_post.schedule_config.hour && page_post.schedule_config.minute) {
@@ -43,10 +40,13 @@ class PostScheduler {
 				minute: page_post.schedule_config.minute,
 			};
 			job = schedule.scheduleJob(rule, async () => {
-				// create a new facebook post
 				try {
+					// create a new facebook post
 					const postPublished = await facebook.createNewPagePost(page_post, workspaceID);
-					console.log(postPublished);
+					// update last post published
+					if (postPublished) {
+						await firestore.updateLastPostPublished(post_scope_id, postPublished);
+					}
 				} catch (error) {
 					console.log("🚀 ~ file: scheduler.ts:44 ~ PostScheduler ~ job=schedule.scheduleJob ~ error", error);
 				}
@@ -54,22 +54,24 @@ class PostScheduler {
 		}
 		// check if job created successfully
 		if (!job) {
-			throw new Error("Error creating new job in scheduler");
+			throw new Error("Scheduler Error: error creating new job in scheduler");
 		}
 		// add job to collection
-		this._jobsCollection.push({ id, job, workspace: workspaceID });
+		this.pageJobsCollection.push({ id, job, workspace: workspaceID });
 
 		// return job data
-		return { id, job, workspace: workspaceID };
+		return {
+			...page_post,
+			job_id: id,
+		};
 	}
 
 	/**
 	 * Create a job for each group job config passed from frontend
 	 * @param sharing_groups group data used to create the jobs for each group
 	 */
-	public addGroupsPosts(sharing_groups: GroupConfigType[]) {
+	public createGroupPosts(sharing_groups: GroupConfigType[], post_scope_id: string) {
 		// create a job for each group
-
 		sharing_groups.forEach((groupConfig) => {
 			// own group logic
 			if (groupConfig.group.administrator) {
@@ -78,10 +80,12 @@ class PostScheduler {
 					hour: groupConfig.schedule.hour,
 					minute: groupConfig.schedule.minute,
 				};
-				schedule.scheduleJob(rule, () => {
-					// get last post_scope post published
-					console.log(groupConfig);
-					// emit dispatcher to chrome extension
+				schedule.scheduleJob(rule, async () => {
+					try {
+						await facebook.shareLastPostInGroups(post_scope_id, groupConfig.group.id);
+					} catch (error) {
+						console.log("🚀 ~ file: scheduler.ts:79 ~ Scheduler ~ schedule.scheduleJob ~ error", error);
+					}
 				});
 			}
 		});
@@ -92,7 +96,7 @@ class PostScheduler {
 	 * @returns active programmed jobs collection
 	 */
 	public getJobs(): string[] {
-		return this._jobsCollection.map((jobs) => {
+		return this.pageJobsCollection.map((jobs) => {
 			return jobs.id;
 		});
 	}
@@ -103,7 +107,7 @@ class PostScheduler {
 	 */
 	public cancellJob(id: string) {
 		// find job in collection
-		const job = this._jobsCollection.find((jobs) => {
+		const job = this.pageJobsCollection.find((jobs) => {
 			return jobs.id === id;
 		});
 
@@ -111,8 +115,8 @@ class PostScheduler {
 		job?.job.cancel();
 
 		// delete schedule from sistem's schedule collection
-		const updatedCollection = this._jobsCollection.filter((job) => job.id !== id);
-		this._jobsCollection = updatedCollection;
+		const updatedCollection = this.pageJobsCollection.filter((job) => job.id !== id);
+		this.pageJobsCollection = updatedCollection;
 	}
 
 	/**
@@ -121,7 +125,7 @@ class PostScheduler {
 	 * @returns boolean
 	 */
 	public jobExists = (id: string): boolean => {
-		const found = this._jobsCollection.find((job) => job.id === id);
+		const found = this.pageJobsCollection.find((job) => job.id === id);
 
 		return !!found;
 	};
@@ -145,12 +149,12 @@ class PostScheduler {
 					}
 				);
 				// add job to collection
-				this._jobsCollection.push({ id: _job.id, job, workspace: _job.workspace });
+				this.pageJobsCollection.push({ id: _job.id, job, workspace: _job.workspace });
 			});
 
 		console.log("jobs restored succesfully!");
 	};
 }
 
-export default PostScheduler;
+export default Scheduler;
 //

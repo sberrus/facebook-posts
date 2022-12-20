@@ -6,7 +6,7 @@ import FacebookController from "./models/facebook";
 import FirebaseApp from "./models/firebase";
 dotenv.config();
 import FirestoreController from "./models/firestore";
-import PostScheduler from "./models/scheduler";
+import Scheduler from "./models/scheduler";
 import Server from "./models/server";
 
 // server
@@ -23,4 +23,4 @@ export const auth = new AuthController();
 // init facebook
 export const facebook = new FacebookController();
 // scheduler app
-export const scheduler = new PostScheduler();
+export const scheduler = new Scheduler();
