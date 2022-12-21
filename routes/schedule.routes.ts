@@ -4,11 +4,7 @@ import { body, param } from "express-validator";
 // scheduler controller
 import { addJob, deleteProgrammedJob, getProgrammedJobs } from "../controllers/schedule.controller";
 // custom validators
-import {
-	// checkIfJobExists,
-	//  checkScheduleConfig,
-	validateAsset,
-} from "../middlewares/jobs.middleware";
+import { validateAsset } from "../middlewares/jobs.middleware";
 // middlewares
 import { errorHandler } from "../middlewares/express-validator";
 import { checkFirebaseUserToken } from "../middlewares/auth.middleware";
@@ -32,11 +28,5 @@ scheduleRouter.post(
 	],
 	addJob
 );
-
-// get all jobs
-scheduleRouter.get("/", getProgrammedJobs);
-
-// get single job data
-scheduleRouter.delete("/:id", [param("id").notEmpty(), errorHandler], deleteProgrammedJob);
 
 export default scheduleRouter;

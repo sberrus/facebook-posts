@@ -376,6 +376,16 @@ class FirestoreController {
 			throw new Error("Firestore Error: Coudln't update post_scope last_post_published");
 		}
 	}
+
+	public async getWorkspaceJobs(workspaceID: string) {
+		try {
+			const postScopeJobs = await this.postScopeReference.where("workspaceID", "==", workspaceID).get();
+			return postScopeJobs.docs.map((job) => job.data());
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:385 ~ FirestoreController ~ getWorkspaceJobs ~ error", error);
+			throw new Error("Firestore Error: Error fetching post_scope jobs");
+		}
+	}
 }
 //
 export default FirestoreController;
