@@ -2,7 +2,13 @@
 import { getFirestore, Firestore, CollectionReference, FieldValue } from "firebase-admin/firestore";
 // types
 import { FacebookPageResponseType } from "../types";
-import { PostDataType, PostPublishedType, PostScopePageJobType, PostScopeType } from "../types/jobs";
+import {
+	PostDataType,
+	PostPublishedType,
+	PostScopeGroupJobType,
+	PostScopePageJobType,
+	PostScopeType,
+} from "../types/jobs";
 import { WorkspaceType } from "../types/workspace";
 
 /**
@@ -350,6 +356,20 @@ class FirestoreController {
 		try {
 			await this.postScopeReference.doc(post_scope_id).update({
 				page_post_job,
+			});
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:346 ~ FirestoreController ~ updateLastPostPublished ~ error", error);
+			throw new Error("Firestore Error: Coudln't update post_scope last_post_published");
+		}
+	}
+
+	public async updatePagePostGroups(post_scope_id: string, group: PostScopeGroupJobType[]) {
+		try {
+			await this.postScopeReference.doc(post_scope_id).update({
+				groups: {
+					owned: group.filter((job) => job.administrator),
+					external: group.filter((job) => !job.administrator),
+				},
 			});
 		} catch (error) {
 			console.log("🚀 ~ file: firestore.ts:346 ~ FirestoreController ~ updateLastPostPublished ~ error", error);

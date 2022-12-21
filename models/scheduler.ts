@@ -2,7 +2,7 @@
 import schedule from "node-schedule";
 import { v4 as uuidv4 } from "uuid";
 import { facebook, firestore } from "../app";
-import { JobType, PageConfigType, GroupConfigType, PostScopePageJobType } from "../types/jobs";
+import { JobType, PageConfigType, GroupConfigType, PostScopePageJobType, PostScopeGroupJobType } from "../types/jobs";
 
 /**
  * Scheduler app.
@@ -70,9 +70,12 @@ class Scheduler {
 	 * Create a job for each group job config passed from frontend
 	 * @param sharing_groups group data used to create the jobs for each group
 	 */
-	public createGroupPosts(sharing_groups: GroupConfigType[], post_scope_id: string) {
+	public createGroupPosts(sharing_groups: GroupConfigType[], post_scope_id: string, workspaceID: string) {
+		// collection
+		let jobs: PostScopeGroupJobType[] = [];
 		// create a job for each group
 		sharing_groups.forEach((groupConfig) => {
+			const id = uuidv4();
 			// own group logic
 			if (groupConfig.group.administrator) {
 				const rule = {
@@ -80,25 +83,43 @@ class Scheduler {
 					hour: groupConfig.schedule.hour,
 					minute: groupConfig.schedule.minute,
 				};
-				schedule.scheduleJob(rule, async () => {
+
+				// program new schedule
+				const groupJob = schedule.scheduleJob(rule, async () => {
 					try {
 						await facebook.shareLastPostInGroups(post_scope_id, groupConfig.group.id);
 					} catch (error) {
 						console.log("🚀 ~ file: scheduler.ts:79 ~ Scheduler ~ schedule.scheduleJob ~ error", error);
 					}
 				});
+
+				// save
+				this.groupJobsCollection.push({ id, job: groupJob, workspace: workspaceID });
+				jobs.push({ ...groupConfig.group, job_id: id });
 			}
 		});
+
+		return jobs;
 	}
 
 	/**
 	 *
 	 * @returns active programmed jobs collection
 	 */
-	public getJobs(): string[] {
-		return this.pageJobsCollection.map((jobs) => {
+	public getJobs() {
+		console.log(this.pageJobsCollection);
+		console.log(this.groupJobsCollection);
+		const pageJobs = this.pageJobsCollection.map((jobs) => {
 			return jobs.id;
 		});
+		const groupsJobs = this.groupJobsCollection.map((jobs) => {
+			return jobs.id;
+		});
+
+		return {
+			pageJobs,
+			groupsJobs,
+		};
 	}
 
 	/**

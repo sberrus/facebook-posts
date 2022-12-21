@@ -36,11 +36,14 @@ export const addJob = async (req: Request, res: Response) => {
 			// create page post job
 			const pagePostJob = scheduler.createPagePostJob(body.page_post, workspaceID, postScopeReference.id);
 
-			// update page_post_config
+			// create groups to share jobs
+			const groupsShareJobs = scheduler.createGroupPosts(body.sharing_groups, postScopeReference.id, workspaceID);
+
+			// update page config data
 			firestore.updatePagePostConfig(postScopeReference.id, pagePostJob);
 
-			// create groups to share jobs
-			const groupsShareJobs = scheduler.createGroupPosts(body.sharing_groups, postScopeReference.id);
+			// update groups
+			firestore.updatePagePostGroups(postScopeReference.id, groupsShareJobs);
 		}
 
 		return res.json({ ok: true, msg: "job created successfully!" });
@@ -54,7 +57,7 @@ export const getProgrammedJobs = (req: Request, res: Response) => {
 	const jobs = scheduler.getJobs();
 
 	//
-	return res.json({ ok: true, jobs });
+	return res.json({ ok: true, pagesJobs: jobs.pageJobs, groupsJobs: jobs.groupsJobs });
 };
 
 export const deleteProgrammedJob = (req: Request, res: Response) => {
