@@ -20,8 +20,9 @@ const scheduleRouter = Router();
 scheduleRouter.post(
 	"/",
 	[
-		body("title").notEmpty().withMessage("Title must be provided"),
-		body("page_post.message").notEmpty().withMessage("Message must be provided"),
+		body("title").notEmpty(),
+		body("page_post.message").notEmpty(),
+		body("page_post.page_id").notEmpty(),
 		body("page_post.type").notEmpty().custom(validateAsset),
 		body("page_post.schedule_config.date").notEmpty().isNumeric(),
 		body("page_post.schedule_config.hour").notEmpty().isNumeric(),

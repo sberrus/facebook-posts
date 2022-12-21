@@ -65,4 +65,5 @@ interface PostScopePageJobType extends PageConfigType {
 
 interface PostScopeGroupJobType extends GroupType {
 	job_id: string;
+	schedule: ScheduleConfigType;
 }

@@ -95,7 +95,7 @@ class Scheduler {
 
 				// save
 				this.groupJobsCollection.push({ id, job: groupJob, workspace: workspaceID });
-				jobs.push({ ...groupConfig.group, job_id: id });
+				jobs.push({ ...groupConfig.group, job_id: id, schedule: groupConfig.schedule });
 			}
 		});
 
