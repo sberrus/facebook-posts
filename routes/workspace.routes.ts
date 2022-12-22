@@ -16,12 +16,12 @@ import { errorHandler } from "../middlewares/express-validator";
 const workspaceRouter = Router();
 
 // workspace
-workspaceRouter.get("/", [checkFirebaseUserToken, errorHandler], getWorkspace);
+workspaceRouter.get("/", errorHandler, getWorkspace);
 // pages
-workspaceRouter.get("/pages", [checkFirebaseUserToken, errorHandler], getAdminPages);
-workspaceRouter.post("/page", [body("page_id").exists(), checkFirebaseUserToken, errorHandler], addPageToWorkspace);
-workspaceRouter.delete("/page", [body("page_id").exists(), checkFirebaseUserToken, errorHandler], deleteWorkspacePage);
+workspaceRouter.get("/pages", errorHandler, getAdminPages);
+workspaceRouter.post("/page", [body("page_id").exists(), errorHandler], addPageToWorkspace);
+workspaceRouter.delete("/page", [body("page_id").exists(), errorHandler], deleteWorkspacePage);
 // jobs
-workspaceRouter.get("/jobs", [checkFirebaseUserToken], getWorkspaceJobs);
+workspaceRouter.get("/jobs", getWorkspaceJobs);
 
 export default workspaceRouter;

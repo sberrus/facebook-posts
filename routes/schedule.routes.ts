@@ -1,13 +1,12 @@
 // imports
 import { Router } from "express";
-import { body, param } from "express-validator";
+import { body } from "express-validator";
 // scheduler controller
-import { addJob, deleteProgrammedJob, getProgrammedJobs } from "../controllers/schedule.controller";
+import { addJob } from "../controllers/schedule.controller";
 // custom validators
 import { validateAsset } from "../middlewares/jobs.middleware";
 // middlewares
 import { errorHandler } from "../middlewares/express-validator";
-import { checkFirebaseUserToken } from "../middlewares/auth.middleware";
 
 //
 const scheduleRouter = Router();
@@ -24,7 +23,6 @@ scheduleRouter.post(
 		body("page_post.schedule_config.hour").notEmpty().isNumeric(),
 		body("page_post.schedule_config.minute").notEmpty().isNumeric(),
 		errorHandler,
-		checkFirebaseUserToken,
 	],
 	addJob
 );

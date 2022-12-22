@@ -8,6 +8,7 @@ import assetsRouter from "../routes/assets.routes";
 import tokenRouter from "../routes/token.routes";
 import workspaceRouter from "../routes/workspace.routes";
 import groupsRouter from "../routes/groups.routes";
+import { checkFirebaseUserToken } from "../middlewares/auth.middleware";
 
 class Server {
 	// properties
@@ -36,6 +37,7 @@ class Server {
 	private middlewares() {
 		this.app.use(bodyParser.json());
 		this.app.use(cors());
+		this.app.use(checkFirebaseUserToken);
 	}
 	private routes() {
 		this.app.use(this.apiPaths.schedule, scheduleRouter);
