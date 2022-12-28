@@ -72,9 +72,13 @@ export const deleteProgrammedJob = (req: Request, res: Response) => {
 	return res.json({ ok: true, msg: `job ${id} deleted succesfully` });
 };
 
+/**
+ * Retrieves the user workspace jobs
+ */
 export const getWorkspaceJobs = async (req: Request, res: Response) => {
 	// user
 	const user = req.firebaseUser;
+	// workspace
 	let workspace;
 
 	try {
@@ -87,6 +91,8 @@ export const getWorkspaceJobs = async (req: Request, res: Response) => {
 			const jobs = await firestore.getWorkspaceJobs(workspace.id);
 			return res.json(jobs);
 		}
+
+		res.status(500).json({ ok: false, msg: "Server Error: Coudln't get workspace jobs, try again later" });
 	} catch (error) {
 		console.log("🚀 ~ file: schedule.controller.ts:91 ~ getWorkspaceJobs ~ error", error);
 		res.status(500).json({ ok: false, msg: "Server Error: Error getting post_scope jobs" });

@@ -40,14 +40,9 @@ export interface JobType {
 	job: schedule.Job;
 }
 
-// post published data
-export interface PostPublishedType {
-	id: string;
-	permalink_url: string;
-}
-
 /** post_scope model */
 export interface PostScopeType {
+	id: string;
 	title: string;
 	last_post_published: PostPublishedType | undefined;
 	page_post_job: PostScopePageJobType | undefined;
@@ -61,6 +56,12 @@ export interface PostScopeType {
 
 interface PostScopePageJobType extends PageConfigType {
 	job_id: string;
+}
+
+// post published data
+export interface PostPublishedType {
+	id: string;
+	permalink_url: string;
 }
 
 interface PostScopeGroupJobType extends GroupType {

@@ -42,7 +42,7 @@ class Scheduler {
 			job = schedule.scheduleJob(rule, async () => {
 				try {
 					// create a new facebook post
-					const postPublished = await facebook.createNewPagePost(page_post, workspaceID);
+					const postPublished = await facebook.createNewPagePost(page_post, workspaceID, post_scope_id);
 					// update last post published
 					if (postPublished) {
 						await firestore.updateLastPostPublished(post_scope_id, postPublished);

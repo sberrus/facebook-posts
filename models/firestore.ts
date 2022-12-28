@@ -50,41 +50,6 @@ class FirestoreController {
 	}
 
 	/**
-	 * Insert new document with job's information
-	 */
-	// public async createJob(
-	// 	{ id }: JobType,
-	// 	{
-	// 		title = "",
-	// 		message = "",
-	// 		type = "text",
-	// 		url = "",
-	// 		emotion = "",
-	// 		asset_src = "",
-	// 		location = "",
-	// 		schedule_config,
-	// 	}: RequestDataType
-	// ) {
-	// 	try {
-	// 		await this.jobsReference.add({
-	// 			id,
-	// 			title,
-	// 			message,
-	// 			type,
-	// 			url,
-	// 			emotion,
-	// 			asset_src,
-	// 			location,
-	// 			schedule_config,
-	// 			job_status: "programmed",
-	// 		});
-	// 	} catch (error) {
-	// 		console.log("🚀 ~ file: firestore.ts:70 ~ FirestoreController ~ error", error);
-	// 		throw new Error("Error when adding doc to firestore");
-	// 	}
-	// }
-
-	/**
 	 * Change the job's status in firestore document
 	 * @param id firestore's job id. Don't confuse with firestore auto-generated document id. It's the id property
 	 * given by the system.
@@ -356,6 +321,7 @@ class FirestoreController {
 		try {
 			await this.postScopeReference.doc(post_scope_id).update({
 				page_post_job,
+				id: post_scope_id,
 			});
 		} catch (error) {
 			console.log("🚀 ~ file: firestore.ts:346 ~ FirestoreController ~ updateLastPostPublished ~ error", error);
@@ -376,6 +342,20 @@ class FirestoreController {
 			throw new Error("Firestore Error: Coudln't update post_scope last_post_published");
 		}
 	}
+
+	/**
+	 * Get single job scope id from job_scope collection
+	 * @param job_scope_id job_scope collection id
+	 */
+	public getJobScope = async (job_scope_id: string) => {
+		try {
+			const jobScope = await this.postScopeReference.doc(job_scope_id).get();
+			return jobScope.data() as PostScopeType;
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:354 ~ FirestoreController ~ getJobScope= ~ error", error);
+			throw new Error("Firestore Error: couldn`t get job_scope");
+		}
+	};
 
 	public async getWorkspaceJobs(workspaceID: string) {
 		try {

@@ -2,7 +2,7 @@
 import { Router } from "express";
 import { body } from "express-validator";
 // scheduler controller
-import { addJob } from "../controllers/schedule.controller";
+import { addJob, getWorkspaceJobs } from "../controllers/schedule.controller";
 // custom validators
 import { validateAsset } from "../middlewares/jobs.middleware";
 // middlewares
@@ -26,5 +26,8 @@ scheduleRouter.post(
 	],
 	addJob
 );
+
+// get workspace jobs
+scheduleRouter.get("/", getWorkspaceJobs);
 
 export default scheduleRouter;

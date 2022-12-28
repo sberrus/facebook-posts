@@ -117,22 +117,28 @@ class FacebookController {
 	 * @param page_post page data to create the new post
 	 * @param workspaceID user's workspace document id
 	 */
-	public createNewPagePost = async (page_post: PageConfigType, workspaceID: string) => {
+	public createNewPagePost = async (page_post: PageConfigType, workspaceID: string, post_scope_id: string) => {
 		let page_token;
 		let post_published;
 
 		try {
-			// get workspace admin longLivedToken
-			const admin_long_lived_token = await firestore.getWorkspaceLongLivedToken(workspaceID);
+			// get job_scope_page
+			const jobScope = await firestore.getJobScope(post_scope_id);
 
-			// get page token
-			if (admin_long_lived_token) {
-				page_token = await this.getPageToken(page_post.page_id, admin_long_lived_token);
-			}
+			// check if job is still running
+			if (jobScope.post_scope_status) {
+				// get workspace admin longLivedToken
+				const admin_long_lived_token = await firestore.getWorkspaceLongLivedToken(workspaceID);
 
-			// check post type
-			if (page_post.type === "text") {
-				post_published = await this.createTextPost(page_post.message, page_token);
+				// get page token
+				if (admin_long_lived_token) {
+					page_token = await this.getPageToken(page_post.page_id, admin_long_lived_token);
+				}
+
+				// check post type
+				if (page_post.type === "text") {
+					post_published = await this.createTextPost(page_post.message, page_token);
+				}
 			}
 		} catch (error) {
 			console.log("🚀 ~ file: facebook.ts:142 ~ FacebookController ~ createNewPagePost= ~ error", error);
@@ -167,22 +173,23 @@ class FacebookController {
 		try {
 			// get post_scope reference
 			const postScopeReference = await firestore.getPostScopeReference(post_scope_id);
-			const { last_post_published, workspaceID } = postScopeReference.data() as PostScopeType;
+			const { last_post_published, workspaceID, post_scope_status } = postScopeReference.data() as PostScopeType;
 
 			// check if there is any post published
 			if (!last_post_published) {
 				console.log("there is any post published yet!");
 				return;
 			}
+			if (post_scope_status) {
+				//  publish the last post in given group
+				const longLivedToken = await firestore.getWorkspaceLongLivedToken(workspaceID);
 
-			//  publish the last post in given group
-			const longLivedToken = await firestore.getWorkspaceLongLivedToken(workspaceID);
-
-			//
-			if (longLivedToken && last_post_published) {
-				return await axios.post(
-					`https://graph.facebook.com/v15.0/${groupID}/feed?link=${last_post_published.permalink_url}&access_token=${longLivedToken}`
-				);
+				//
+				if (longLivedToken && last_post_published) {
+					return await axios.post(
+						`https://graph.facebook.com/v15.0/${groupID}/feed?link=${last_post_published.permalink_url}&access_token=${longLivedToken}`
+					);
+				}
 			}
 		} catch (error) {
 			console.log("🚀 ~ file: facebook.ts:171 ~ FacebookController ~ shareLastPostInGroups ~ error", error);
