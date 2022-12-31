@@ -211,7 +211,7 @@ class FacebookController {
 			}
 		} catch (error: any) {
 			console.log(error.response.data);
-			throw "Facebook error: Couldn't get group data";
+			throw "Facebook error: group not found!";
 		}
 	}
 }
