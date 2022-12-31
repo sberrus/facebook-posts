@@ -5,7 +5,7 @@ import { firestore } from "../app";
 // type
 import { FacebookPageResponseType } from "../types/index";
 import { PageConfigType, PostScopeType, PostPublishedType } from "../types/jobs";
-import { GroupType } from "../types/workspace";
+import { ExternalGroupType, GroupType } from "../types/workspace";
 interface LongLiveTokenResponse {
 	access_token: string;
 }
@@ -194,6 +194,24 @@ class FacebookController {
 		} catch (error) {
 			console.log("🚀 ~ file: facebook.ts:171 ~ FacebookController ~ shareLastPostInGroups ~ error", error);
 			throw new Error("Facebook Error: Couldn't share the last post published in group");
+		}
+	}
+
+	public async externalGroupIsValid(userID: string, groupID: string) {
+		try {
+			// get long lived token
+			const workspace = await firestore.getUserWorkspace(userID);
+
+			// check external group
+			if (workspace?.longLivedToken) {
+				const res = await axios.get(
+					`https://graph.facebook.com/v15.0/${groupID}?fields=name,id,picture&access_token=${workspace.longLivedToken}`
+				);
+				return res.data as ExternalGroupType;
+			}
+		} catch (error: any) {
+			console.log(error.response.data);
+			throw "Facebook error: Couldn't get group data";
 		}
 	}
 }

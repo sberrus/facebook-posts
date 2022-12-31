@@ -7,11 +7,25 @@ export interface WorkspaceType {
 	longLivedToken?: string; //sensible
 }
 
-// Group data type
+// Own group data type
 export interface GroupType {
 	name: string;
 	id: string;
 	administrator: string;
+	picture: {
+		data: {
+			height: number;
+			width: number;
+			is_silhouette: boolean;
+			url: string;
+		};
+	};
+}
+
+// External group data type
+export interface ExternalGroupType {
+	name: string;
+	id: string;
 	picture: {
 		data: {
 			height: number;

@@ -36,3 +36,22 @@ export const getWorkspaceGroups = async (req: Request, res: Response) => {
 	// dont have to get here :v
 	return res.status(500).json({ ok: false, msg: "Server error trying to get firebase user" });
 };
+
+export const checkExternalGroups = async (req: Request, res: Response) => {
+	const user = req.firebaseUser;
+	const group = req.query["url"];
+
+	// check if external is valid
+	if (typeof group === "string" && user) {
+		const splitted = group.split("/");
+		const groupID = splitted[splitted.length - 1];
+		try {
+			const groupData = await facebook.externalGroupIsValid(user.uid, groupID);
+			if (groupData) {
+				return res.json({ groupData });
+			}
+		} catch (error) {
+			return res.status(500).json({ ok: false, msg: error });
+		}
+	}
+};

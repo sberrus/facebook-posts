@@ -148,6 +148,9 @@ class FirestoreController {
 		}
 	}
 
+	/**
+	 * Get the user's authenticated workspace
+	 */
 	public async getUserWorkspace(firebaseUserUid: string) {
 		try {
 			const user = await this.getUser(firebaseUserUid);
