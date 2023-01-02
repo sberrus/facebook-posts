@@ -97,6 +97,7 @@ class Scheduler {
 				jobs.push({ ...groupConfig.group, job_id: id, schedule: groupConfig.schedule });
 			} else {
 				const groupJob = schedule.scheduleJob(rule, () => {
+					// TODO: Incorporar socket server a app
 					// TODO: Emit event to chrome extension
 					console.log("Emitido evento a extension");
 				});
