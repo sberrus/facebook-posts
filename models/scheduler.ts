@@ -76,15 +76,14 @@ class Scheduler {
 		// create a job for each group
 		sharing_groups.forEach((groupConfig) => {
 			const id = uuidv4();
-			// own group logic
-			if (groupConfig.group.administrator) {
-				const rule = {
-					dayOfWeek: groupConfig.schedule.date,
-					hour: groupConfig.schedule.hour,
-					minute: groupConfig.schedule.minute,
-				};
+			const rule = {
+				dayOfWeek: groupConfig.schedule.date,
+				hour: groupConfig.schedule.hour,
+				minute: groupConfig.schedule.minute,
+			};
 
-				// program new schedule
+			// own group job logic
+			if (groupConfig.group.administrator) {
 				const groupJob = schedule.scheduleJob(rule, async () => {
 					try {
 						await facebook.shareLastPostInGroups(post_scope_id, groupConfig.group.id);
@@ -94,6 +93,14 @@ class Scheduler {
 				});
 
 				// save
+				this.groupJobsCollection.push({ id, job: groupJob, workspace: workspaceID });
+				jobs.push({ ...groupConfig.group, job_id: id, schedule: groupConfig.schedule });
+			} else {
+				const groupJob = schedule.scheduleJob(rule, () => {
+					// TODO: Emit event to chrome extension
+					console.log("Emitido evento a extension");
+				});
+				console.log(groupJob.nextInvocation());
 				this.groupJobsCollection.push({ id, job: groupJob, workspace: workspaceID });
 				jobs.push({ ...groupConfig.group, job_id: id, schedule: groupConfig.schedule });
 			}
