@@ -12,6 +12,7 @@ import tokenRouter from "../routes/token.routes";
 import workspaceRouter from "../routes/workspace.routes";
 import groupsRouter from "../routes/groups.routes";
 import { checkFirebaseUserToken } from "../middlewares/auth.middleware";
+import { socketController } from "../sockets/sockets.controller";
 
 class Server {
 	// properties
@@ -48,8 +49,10 @@ class Server {
 	}
 
 	private sockets() {
-		this.io.on("connection", () => {
-			console.log("User connected");
+		// connection handler
+
+		this.io.on("connection", (socket) => {
+			socketController(socket, this.io);
 		});
 	}
 
