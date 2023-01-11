@@ -95,13 +95,18 @@ class Scheduler {
 				// save
 				this.groupJobsCollection.push({ id, job: groupJob, workspace: workspaceID });
 				jobs.push({ ...groupConfig.group, job_id: id, schedule: groupConfig.schedule });
-			} else {
+			}
+
+			// external group logic
+			if (!groupConfig.group.administrator) {
 				const groupJob = schedule.scheduleJob(rule, () => {
-					// TODO: Incorporar socket server a app
+					// TODO: Use socket controller to emit new event to workspace room
+
 					// TODO: Emit event to chrome extension
 					console.log("Emitido evento a extension");
 				});
-				console.log(groupJob.nextInvocation());
+
+				// save
 				this.groupJobsCollection.push({ id, job: groupJob, workspace: workspaceID });
 				jobs.push({ ...groupConfig.group, job_id: id, schedule: groupConfig.schedule });
 			}

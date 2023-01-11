@@ -15,7 +15,7 @@ class AuthController {
 		try {
 			return await this.auth.verifyIdToken(token);
 		} catch (error) {
-			console.log("🚀 ~ file: auth.ts:18 ~ AuthController ~ checkAuthToken ~ error", error);
+			console.log(error);
 		}
 	}
 }

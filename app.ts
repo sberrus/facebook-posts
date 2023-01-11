@@ -8,6 +8,7 @@ dotenv.config();
 import FirestoreController from "./models/firestore";
 import Scheduler from "./models/scheduler";
 import Server from "./models/server";
+import SocketController from "./models/sockets";
 
 // server
 const server = new Server();
@@ -24,3 +25,5 @@ export const auth = new AuthController();
 export const facebook = new FacebookController();
 // scheduler app
 export const scheduler = new Scheduler();
+// socket controller
+export const sockets = new SocketController(server.io);

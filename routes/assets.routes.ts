@@ -8,9 +8,9 @@ import processFileMiddleware from "../middlewares/upload";
 import { getAssetsList, uploadAssetsToFirebase } from "../controllers/assets.controller";
 
 //
-const testRouter = Router();
+const assetsRouter = Router();
 
-testRouter.get("/", getAssetsList);
-testRouter.post("/upload", [header("x-auth-firebase"), errorHandler, processFileMiddleware], uploadAssetsToFirebase);
+assetsRouter.get("/", getAssetsList);
+assetsRouter.post("/upload", [header("x-auth-firebase"), errorHandler, processFileMiddleware], uploadAssetsToFirebase);
 
-export default testRouter;
+export default assetsRouter;

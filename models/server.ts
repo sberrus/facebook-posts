@@ -12,7 +12,7 @@ import tokenRouter from "../routes/token.routes";
 import workspaceRouter from "../routes/workspace.routes";
 import groupsRouter from "../routes/groups.routes";
 import { checkFirebaseUserToken } from "../middlewares/auth.middleware";
-import { socketController } from "../sockets/sockets.controller";
+import testRouter from "../routes/test.routes";
 
 class Server {
 	// properties
@@ -20,7 +20,7 @@ class Server {
 	private port: string;
 	// socket.io
 	private server: http.Server;
-	private io: socketServer;
+	io: socketServer;
 
 	// api paths
 	private apiPaths = {
@@ -29,6 +29,7 @@ class Server {
 		assets: "/api/assets",
 		workspace: "/api/workspace",
 		groups: "/api/groups",
+		test: "/api/test",
 	};
 
 	constructor() {
@@ -44,16 +45,6 @@ class Server {
 		this.server = http.createServer(this.app);
 
 		this.io = new socketServer(this.server);
-		// init socket
-		this.sockets();
-	}
-
-	private sockets() {
-		// connection handler
-
-		this.io.on("connection", (socket) => {
-			socketController(socket, this.io);
-		});
 	}
 
 	private middlewares() {
@@ -68,6 +59,7 @@ class Server {
 		this.app.use(this.apiPaths.assets, assetsRouter);
 		this.app.use(this.apiPaths.workspace, workspaceRouter);
 		this.app.use(this.apiPaths.groups, groupsRouter);
+		this.app.use(this.apiPaths.groups, testRouter);
 	}
 
 	listen() {
