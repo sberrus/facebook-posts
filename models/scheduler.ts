@@ -86,7 +86,7 @@ class Scheduler {
 			if (groupConfig.group.administrator) {
 				const groupJob = schedule.scheduleJob(rule, async () => {
 					try {
-						await facebook.shareLastPostInGroups(post_scope_id, groupConfig.group.id);
+						await facebook.shareLastPostInOwnGroups(post_scope_id, groupConfig.group.id);
 					} catch (error) {
 						console.log("🚀 ~ file: scheduler.ts:79 ~ Scheduler ~ schedule.scheduleJob ~ error", error);
 					}
@@ -100,12 +100,12 @@ class Scheduler {
 			// external group logic
 			if (!groupConfig.group.administrator) {
 				const groupJob = schedule.scheduleJob(rule, () => {
-					// TODO: Use socket controller to emit new event to workspace room
-
-					// TODO: Emit event to chrome extension
-					console.log("Emitido evento a extension");
+					try {
+						facebook.shareLastPostInExternalGroups(post_scope_id);
+					} catch (error) {
+						console.log(error);
+					}
 				});
-
 				// save
 				this.groupJobsCollection.push({ id, job: groupJob, workspace: workspaceID });
 				jobs.push({ ...groupConfig.group, job_id: id, schedule: groupConfig.schedule });

@@ -1,10 +1,11 @@
 // imports
 import axios from "axios";
-import { firestore } from "../app";
+import { firestore, sockets } from "../app";
 
 // type
 import { FacebookPageResponseType } from "../types/index";
 import { PageConfigType, PostScopeType, PostPublishedType } from "../types/jobs";
+import { ShareGroupEventType } from "../types/sockets";
 import { ExternalGroupType, GroupType } from "../types/workspace";
 interface LongLiveTokenResponse {
 	access_token: string;
@@ -169,7 +170,7 @@ class FacebookController {
 	 * Share in specified group owned by admin the last post page published in
 	 * post scope
 	 */
-	public async shareLastPostInGroups(post_scope_id: string, groupID: string) {
+	public async shareLastPostInOwnGroups(post_scope_id: string, groupID: string) {
 		try {
 			// get post_scope reference
 			const postScopeReference = await firestore.getPostScopeReference(post_scope_id);
@@ -212,6 +213,40 @@ class FacebookController {
 		} catch (error: any) {
 			console.log(error.response.data);
 			throw "Facebook error: group not found!";
+		}
+	}
+
+	/**
+	 * Given the post_scope, emit event to python script via socket to share the page post in external group.
+	 * @param post_scope_id
+	 */
+	public async shareLastPostInExternalGroups(post_scope_id: string) {
+		try {
+			// get post_scope reference
+			const postScopeReference = await firestore.getPostScopeReference(post_scope_id);
+			const { last_post_published, workspaceID, post_scope_status, groups } =
+				postScopeReference.data() as PostScopeType;
+
+			// check if there is any post published
+			if (!last_post_published) {
+				console.log("there is any post published yet!");
+				return;
+			}
+
+			if (post_scope_status) {
+				// get data for python script
+				let eventData: ShareGroupEventType = {
+					page_post: {
+						permalink_url: last_post_published.permalink_url,
+					},
+					groups: groups.external,
+				};
+				// emit event.
+				sockets.emitShareGroupsEvent(workspaceID, eventData);
+			}
+		} catch (error) {
+			console.log("🚀 ~ file: facebook.ts:171 ~ FacebookController ~ shareLastPostInGroups ~ error", error);
+			throw new Error("Facebook Error: Couldn't share the last post published in group");
 		}
 	}
 }

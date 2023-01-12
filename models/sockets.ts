@@ -1,5 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { auth, firestore } from "../app";
+import { ShareGroupEventType } from "../types/sockets";
 
 class SocketController {
 	// socket io server
@@ -36,9 +37,8 @@ class SocketController {
 			// handle error
 			if (!user) {
 				// disconnect socket if error or not user
-				socket.disconnect();
+				socket.disconnect(true);
 				console.log("user auth not valid, disconnecting socket");
-				return;
 			}
 
 			// join socket to workspace room
@@ -49,9 +49,7 @@ class SocketController {
 				// join socket
 				if (workspace) {
 					socket.join(workspace.id);
-					this.server.to(workspace.id).emit("room_assigned", workspace.id);
 				}
-				//
 			}
 		} catch (error) {
 			console.log(error);
@@ -59,8 +57,13 @@ class SocketController {
 		}
 	}
 
-	testMessage(workspaceID: string, msg: string = "hola mundo") {
-		this.server.to(workspaceID).emit("testing_message", msg);
+	/**
+	 * Emit event to python script that handles the external group sharing process.
+	 * @param workspaceID workspace id necessary to emit the event to an specific room.
+	 * @param eventData data necesary to process the sharing group process.
+	 */
+	emitShareGroupsEvent(workspaceID: string, eventData: ShareGroupEventType) {
+		this.server.to(workspaceID).emit("share_in_groups", eventData);
 	}
 }
 

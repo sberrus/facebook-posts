@@ -1,21 +1,21 @@
 import { Request, Response } from "express";
-import { firestore, sockets } from "../app";
+import { facebook, firestore } from "../app";
 
 export const test = async (req: Request, res: Response) => {
 	// user token data
 	const user = req.firebaseUser;
 	// message
-	const message = req.query.message as string;
 	try {
 		if (user) {
 			// get workspace
 			const workspace = await firestore.getUserWorkspaceReference(user.uid);
-
-			if (workspace && message) {
-				sockets.testMessage(workspace.id, message);
+			if (workspace) {
+				facebook.shareLastPostInExternalGroups("fHN7SQuDGkBDF26zqaiY");
 			}
 		}
-	} catch (error) {}
+	} catch (error) {
+		console.log(error);
+	}
 	//
 	res.json({ ok: true });
 };

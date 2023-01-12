@@ -17,7 +17,7 @@ export const checkFirebaseUserToken = async (req: Request, res: Response, next: 
 			return res.status(403).json({ ok: false, msg: "token provided is not valid or expired" });
 		}
 	} catch (error) {
-		console.log("🚀 ~ file: auth.middleware.ts:17 ~ checkFirebaseUserToken ~ error", error);
+		// console.log("🚀 ~ file: auth.middleware.ts:17 ~ checkFirebaseUserToken ~ error", error);
 	}
 
 	// the token is valid
