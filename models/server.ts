@@ -59,7 +59,7 @@ class Server {
 		this.app.use(this.apiPaths.assets, assetsRouter);
 		this.app.use(this.apiPaths.workspace, workspaceRouter);
 		this.app.use(this.apiPaths.groups, groupsRouter);
-		this.app.use(this.apiPaths.groups, testRouter);
+		this.app.use(this.apiPaths.test, testRouter);
 	}
 
 	listen() {
