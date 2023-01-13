@@ -97,7 +97,4 @@ export const getWorkspaceJobs = async (req: Request, res: Response) => {
 		console.log("🚀 ~ file: schedule.controller.ts:91 ~ getWorkspaceJobs ~ error", error);
 		res.status(500).json({ ok: false, msg: "Server Error: Error getting post_scope jobs" });
 	}
-
-	//
-	res.json({ ok: true });
 };

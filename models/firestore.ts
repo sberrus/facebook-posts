@@ -1,4 +1,5 @@
 // imports
+import { database } from "firebase-admin";
 import { getFirestore, Firestore, CollectionReference, FieldValue } from "firebase-admin/firestore";
 // types
 import { FacebookPageResponseType } from "../types";
@@ -281,6 +282,8 @@ class FirestoreController {
 					external: [],
 				},
 				post_scope_status: true,
+				created_at: Date.now(),
+				updated_at: Date.now(),
 			};
 
 			const res = await this.postScopeReference.add(postScope);
@@ -362,10 +365,13 @@ class FirestoreController {
 
 	public async getWorkspaceJobs(workspaceID: string) {
 		try {
-			const postScopeJobs = await this.postScopeReference.where("workspaceID", "==", workspaceID).get();
+			const postScopeJobs = await this.postScopeReference
+				.where("workspaceID", "==", workspaceID)
+				.orderBy("updated_at", "desc")
+				.get();
 			return postScopeJobs.docs.map((job) => job.data());
 		} catch (error) {
-			console.log("🚀 ~ file: firestore.ts:385 ~ FirestoreController ~ getWorkspaceJobs ~ error", error);
+			console.log("🚀 ~ file: firestore.ts:374 ~ FirestoreController ~ getWorkspaceJobs ~ error", error);
 			throw new Error("Firestore Error: Error fetching post_scope jobs");
 		}
 	}
