@@ -1,6 +1,7 @@
 // imports
 import axios from "axios";
 import { firestore, sockets } from "../app";
+import { sleep } from "../helpers/util";
 
 // type
 import { FacebookPageResponseType } from "../types/index";
@@ -221,32 +222,91 @@ class FacebookController {
 	 * @param post_scope_id
 	 */
 	public async shareLastPostInExternalGroups(post_scope_id: string) {
+		// reference data
+		let postScopeReference: FirebaseFirestore.DocumentData | undefined;
+		let postScopeData: PostScopeType | undefined;
+
+		// METHODS
+
+		/**
+		 * Get the last post_scope's snapshot
+		 */
+		const getReferenceData = async () => {
+			postScopeReference = await firestore.getPostScopeReference(post_scope_id);
+			postScopeData = postScopeReference.data() as PostScopeType;
+		};
+
+		/**
+		 * Parse the event data and emit the event to the python socket client scirpt
+		 */
+		const emitEventIsValid = () => {
+			if (postScopeData) {
+				if (postScopeData.post_scope_status && postScopeData.last_post_published) {
+					// get data for python script
+					let eventData: ShareGroupEventType = {
+						page_post: {
+							permalink_url: postScopeData.last_post_published.permalink_url,
+						},
+						groups: postScopeData.groups.external,
+					};
+					// emit event.
+					sockets.emitShareGroupsEvent(postScopeData.workspaceID, eventData);
+					console.log("event emited with data", eventData);
+				}
+			}
+		};
+
+		/**
+		 * Checks if the
+		 */
+		const main = async () => {
+			// retry engine
+			let count = 0;
+			let eventEmitted = false;
+
+			try {
+				// get reference data
+				await getReferenceData();
+
+				// check if data exist
+				if (postScopeData) {
+					// check if last_post_published exist
+					if (!postScopeData.last_post_published) {
+						// retry
+						while (count <= 2) {
+							// wait 10 secs to try again
+							await sleep(10);
+							// ask for data again
+							await getReferenceData();
+							// if last_post_published exists exit loop
+
+							if (postScopeData.last_post_published) {
+								// emit event is last_post_published exists
+								emitEventIsValid();
+								return;
+							}
+							// add count
+							count++;
+						}
+
+						if (!eventEmitted) {
+							// if all tries fail, return
+							count = 1;
+							return;
+						}
+					}
+				}
+			} catch (error) {
+				console.log("🚀 ~ file: facebook.ts:171 ~ FacebookController ~ shareLastPostInGroups ~ error", error);
+				throw new Error("Facebook Error: Couldn't share the last post published in group");
+			}
+		};
+
+		// execute logic
 		try {
-			// get post_scope reference
-			const postScopeReference = await firestore.getPostScopeReference(post_scope_id);
-			const { last_post_published, workspaceID, post_scope_status, groups } =
-				postScopeReference.data() as PostScopeType;
-
-			// check if there is any post published
-			if (!last_post_published) {
-				console.log("there is any post published yet!");
-				return;
-			}
-
-			if (post_scope_status) {
-				// get data for python script
-				let eventData: ShareGroupEventType = {
-					page_post: {
-						permalink_url: last_post_published.permalink_url,
-					},
-					groups: groups.external,
-				};
-				// emit event.
-				sockets.emitShareGroupsEvent(workspaceID, eventData);
-			}
+			await main();
 		} catch (error) {
-			console.log("🚀 ~ file: facebook.ts:171 ~ FacebookController ~ shareLastPostInGroups ~ error", error);
-			throw new Error("Facebook Error: Couldn't share the last post published in group");
+			console.log(error);
 		}
 	}
 }
