@@ -74,9 +74,9 @@ class FirestoreController {
 
 	public async createNewWorkspace(documentData: WorkspaceType) {
 		try {
-			const success = await this.workspacesReference.add(documentData);
-			if (success) {
-				return success;
+			const res = await this.workspacesReference.add(documentData);
+			if (res) {
+				return res;
 			}
 		} catch (error) {
 			console.log(error);
@@ -153,6 +153,7 @@ class FirestoreController {
 		try {
 			// check if user exists
 			const checkedUser = await this.usersReference.doc(uid).get();
+			console.log("🚀 ~ file: firestore.ts:156 ~ FirestoreController ~ addNewUser ~ checkedUser", checkedUser);
 
 			// if user exists return
 			if (checkedUser.exists) {

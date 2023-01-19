@@ -167,12 +167,34 @@ class FacebookController {
 		}
 	}
 
+	public async externalGroupIsValid(userID: string, groupID: string) {
+		try {
+			// get long lived token
+			const workspace = await firestore.getUserWorkspace(userID);
+
+			// check external group
+			if (workspace?.longLivedToken) {
+				const res = await axios.get(
+					`https://graph.facebook.com/v15.0/${groupID}?fields=name,id,picture&access_token=${workspace.longLivedToken}`
+				);
+				return res.data as ExternalGroupType;
+			}
+		} catch (error: any) {
+			console.log(error.response.data);
+			throw "Facebook error: group not found!";
+		}
+	}
+
 	/**
 	 * Share in specified group owned by admin the last post page published in
 	 * post scope
 	 */
 	public async shareLastPostInOwnGroups(post_scope_id: string, groupID: string) {
 		try {
+			//TODO: CREATE THE RETRY ENGINE
+			// provisional
+			await sleep(10);
+
 			// get post_scope reference
 			const postScopeReference = await firestore.getPostScopeReference(post_scope_id);
 			const { last_post_published, workspaceID, post_scope_status } = postScopeReference.data() as PostScopeType;
@@ -196,24 +218,6 @@ class FacebookController {
 		} catch (error) {
 			console.log("🚀 ~ file: facebook.ts:171 ~ FacebookController ~ shareLastPostInGroups ~ error", error);
 			throw new Error("Facebook Error: Couldn't share the last post published in group");
-		}
-	}
-
-	public async externalGroupIsValid(userID: string, groupID: string) {
-		try {
-			// get long lived token
-			const workspace = await firestore.getUserWorkspace(userID);
-
-			// check external group
-			if (workspace?.longLivedToken) {
-				const res = await axios.get(
-					`https://graph.facebook.com/v15.0/${groupID}?fields=name,id,picture&access_token=${workspace.longLivedToken}`
-				);
-				return res.data as ExternalGroupType;
-			}
-		} catch (error: any) {
-			console.log(error.response.data);
-			throw "Facebook error: group not found!";
 		}
 	}
 

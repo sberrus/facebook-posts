@@ -40,27 +40,26 @@ export const checkTokenStatus = async (req: Request, res: Response) => {
 	// workspace Long Lived Token
 	let longLivedToken;
 
-	// debug
-	if (!user) {
-		return res.status(403).json({ ok: false, msg: "user token not found" });
-	}
-
 	try {
 		// Get user workspace
 		if (user) {
 			const workspace = await firestore.getUserWorkspace(user.uid);
+
 			if (!workspace) {
 				return res.status(404).json({ ok: false, msg: "The token is not valid or not exists!" });
 			}
 
 			longLivedToken = workspace.longLivedToken;
 		}
+
 		if (longLivedToken) {
 			const isValidToken = await isLongLivedTokenValid(longLivedToken);
 			// check if workspace have valid longLivedToken
 			if (isValidToken) {
-				res.json({ ok: true, token_status: true });
+				return res.json({ ok: true, token_status: true });
 			}
+		} else {
+			res.status(500).json({ ok: false });
 		}
 	} catch (error: any) {
 		console.log("🚀 ~ file: token.controller.ts:33 ~ checkTokenStatus ~ error", error);
