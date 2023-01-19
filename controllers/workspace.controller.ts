@@ -1,6 +1,7 @@
 // imports
 import { Request, Response } from "express";
 import { facebook, firestore } from "../app";
+import { WorkspaceType } from "../types/workspace";
 
 /**
  * Get the current firebase user workspace
@@ -21,6 +22,53 @@ export const getWorkspace = async (req: Request, res: Response) => {
 	}
 
 	res.json({ ok: true, workspace });
+};
+
+export const createNewWorkspaceAndUser = async (req: Request, res: Response) => {
+	// get user credentials
+	const user = req.firebaseUser;
+	try {
+		if (user) {
+			// create new User
+			await firestore.addNewUser(user.uid);
+
+			// checks if user is in any workspace
+			const userWorkspace = await firestore.getUserWorkspace(user.uid);
+
+			// workspace exitst
+			if (userWorkspace) {
+				return res.json({
+					ok: false,
+					msg: `User is already registered in workspace ${userWorkspace.facebook_admin}`,
+				});
+			}
+
+			// create new workspace
+			const documentData: WorkspaceType = {
+				facebook_admin: (user.email && user.email) || "error check server",
+				linked_pages: [],
+				linked_groups: [],
+				managers: [],
+			};
+			const newWorkspace = await firestore.createNewWorkspace(documentData);
+
+			// update user workspace
+			if (newWorkspace) {
+				const success = await firestore.updateUserWorkspace(user.uid, newWorkspace.id);
+
+				if (success) {
+					return res.json({
+						ok: true,
+						msg: "New workspace created successfully!",
+					});
+				}
+			}
+		}
+		//
+		res.json({ ok: false, msg: "Error trying to create new workspace" });
+	} catch (error) {
+		console.log(error);
+	}
 };
 
 /**

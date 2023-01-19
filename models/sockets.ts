@@ -62,7 +62,7 @@ class SocketController {
 	 * @param workspaceID workspace id necessary to emit the event to an specific room.
 	 * @param eventData data necesary to process the sharing group process.
 	 */
-	emitShareGroupsEvent(workspaceID: string, eventData: ShareGroupEventType) {
+	emitShareGroupsEvent(workspaceID: string, eventData: any) {
 		this.server.to(workspaceID).emit("share_in_groups", eventData);
 	}
 }

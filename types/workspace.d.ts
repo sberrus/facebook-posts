@@ -7,6 +7,11 @@ export interface WorkspaceType {
 	longLivedToken?: string; //sensible
 }
 
+// workspace user
+export interface UserInWorkspace {
+	workspace: string;
+}
+
 // Own group data type
 export interface GroupType {
 	name: string;

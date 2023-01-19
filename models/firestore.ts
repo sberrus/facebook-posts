@@ -1,5 +1,4 @@
 // imports
-import { database } from "firebase-admin";
 import { getFirestore, Firestore, CollectionReference, FieldValue } from "firebase-admin/firestore";
 // types
 import { FacebookPageResponseType } from "../types";
@@ -10,7 +9,7 @@ import {
 	PostScopePageJobType,
 	PostScopeType,
 } from "../types/jobs";
-import { WorkspaceType } from "../types/workspace";
+import { UserInWorkspace, WorkspaceType } from "../types/workspace";
 
 /**
  * Firestore controller
@@ -73,6 +72,17 @@ class FirestoreController {
 		}
 	}
 
+	public async createNewWorkspace(documentData: WorkspaceType) {
+		try {
+			const success = await this.workspacesReference.add(documentData);
+			if (success) {
+				return success;
+			}
+		} catch (error) {
+			console.log(error);
+		}
+	}
+
 	/**
 	 * Retrieves the LongLivedToken for the given workspaceID
 	 * @param workspaceID workspace collection document id
@@ -106,18 +116,74 @@ class FirestoreController {
 	}
 
 	/**
-	 * Get users data and workspace information by its firebase uid
+	 * Retrieve the list of all workspace jobs.
+	 * @param workspaceID Firestore workspace collection document id.
+	 * @returns
+	 */
+	public async getWorkspaceJobs(workspaceID: string) {
+		try {
+			const postScopeJobs = await this.postScopeReference
+				.where("workspaceID", "==", workspaceID)
+				.orderBy("updated_at", "desc")
+				.get();
+			return postScopeJobs.docs.map((job) => job.data());
+		} catch (error) {
+			console.log("🚀 ~ file: firestore.ts:374 ~ FirestoreController ~ getWorkspaceJobs ~ error", error);
+			throw new Error("Firestore Error: Error fetching post_scope jobs");
+		}
+	}
+
+	/**
+	 * Get user data by its firebase uid
 	 */
 	public async getUser(uid: string) {
 		// get users passed their
 		try {
 			const user = await this.usersReference.doc(uid).get();
 			if (user.exists) {
-				return user;
+				return user.data() as UserInWorkspace;
 			}
 		} catch (error) {
 			console.log("🚀 ~ file: firestore.ts:149 ~ FirestoreController ~ getUser ~ error", error);
 			throw error;
+		}
+	}
+
+	public async addNewUser(uid: string) {
+		try {
+			// check if user exists
+			const checkedUser = await this.usersReference.doc(uid).get();
+
+			// if user exists return
+			if (checkedUser.exists) {
+				return;
+			}
+
+			// if no user create new user
+			const newUser = await this.usersReference.doc(uid).set({});
+			if (newUser) {
+				return newUser;
+			}
+		} catch (error) {
+			console.log(error);
+		}
+	}
+
+	/**
+	 * Updates the user workspace
+	 * @param uid firestore user token uid
+	 * @param workspace workspace collection document id
+	 * @returns
+	 */
+	public async updateUserWorkspace(uid: string, workspace: string) {
+		try {
+			const updateRes = await this.usersReference.doc(uid).update({ workspace });
+
+			if (updateRes) {
+				return updateRes;
+			}
+		} catch (error) {
+			console.log(error);
 		}
 	}
 
@@ -129,16 +195,13 @@ class FirestoreController {
 		try {
 			const user = await this.getUser(firebaseUserUid);
 			// check if user exists
-			if (!user?.exists) {
+			if (!user) {
 				throw new Error("Firestore error: There is not user in users collection");
 			}
 
-			// get firestore workspace user
-			const workspaceUser = user.data();
-
-			if (workspaceUser) {
-				// find workspace
-				const workspace = await this.workspacesReference.doc(workspaceUser.workspace).get();
+			// Get workspace
+			if (user) {
+				const workspace = await this.workspacesReference.doc(user.workspace).get();
 				if (workspace.exists) {
 					return workspace;
 				}
@@ -150,29 +213,23 @@ class FirestoreController {
 	}
 
 	/**
-	 * Get the user's authenticated workspace
+	 * Get the user's authenticated workspace or undefined if no workspace detected for the user
 	 */
 	public async getUserWorkspace(firebaseUserUid: string) {
 		try {
+			// get user
 			const user = await this.getUser(firebaseUserUid);
-			// check if user exists
-			if (!user?.exists) {
-				console.log("🚀 ~ file: firestore.ts:166 ~ FirestoreController ~ getUserWorkspace ~ exists", user?.exists);
-				return;
-			}
 
-			// get firestore workspace user
-			const workspaceUser = user.data();
-
-			if (workspaceUser) {
+			// return workspace data
+			if (user && user.workspace) {
 				// find workspace
-				const workspace = await this.workspacesReference.doc(workspaceUser.workspace).get();
+				const workspace = await this.workspacesReference.doc(user.workspace).get();
 				if (workspace.exists) {
 					return workspace.data() as WorkspaceType;
 				}
 			}
 		} catch (error) {
-			console.log("🚀 ~ file: firestore.ts:174 ~ FirestoreController ~ getUserWorkspace ~ error", error);
+			console.log("🚀 ~ file: firestore.ts:195 ~ FirestoreController ~ getUserWorkspace ~ error", error);
 			throw error;
 		}
 	}
@@ -187,18 +244,15 @@ class FirestoreController {
 		try {
 			// get user data
 			const user = await this.getUser(firebaseUserUid);
-			if (!user?.exists) {
-				console.log("🚀 ~ file: firestore.ts:166 ~ FirestoreController ~ getUserWorkspace ~ exists", user?.exists);
+			if (!user) {
+				console.log("🚀 ~ file: firestore.ts:166 ~ FirestoreController ~ getUserWorkspace ~ exists", user);
 				return;
 			}
 
-			// get firestore workspace user
-			const workspaceUser = user.data();
-
 			// if user exists, save Long lived Token
-			if (workspaceUser) {
+			if (user) {
 				// find workspace
-				await this.workspacesReference.doc(workspaceUser.workspace).update({
+				await this.workspacesReference.doc(user.workspace).update({
 					longLivedToken: longLivedToken,
 				});
 			}
@@ -362,19 +416,6 @@ class FirestoreController {
 			throw new Error("Firestore Error: couldn`t get job_scope");
 		}
 	};
-
-	public async getWorkspaceJobs(workspaceID: string) {
-		try {
-			const postScopeJobs = await this.postScopeReference
-				.where("workspaceID", "==", workspaceID)
-				.orderBy("updated_at", "desc")
-				.get();
-			return postScopeJobs.docs.map((job) => job.data());
-		} catch (error) {
-			console.log("🚀 ~ file: firestore.ts:374 ~ FirestoreController ~ getWorkspaceJobs ~ error", error);
-			throw new Error("Firestore Error: Error fetching post_scope jobs");
-		}
-	}
 }
 //
 export default FirestoreController;
