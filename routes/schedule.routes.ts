@@ -1,6 +1,6 @@
 // imports
 import { Router } from "express";
-import { body } from "express-validator";
+import { body, query } from "express-validator";
 // scheduler controller
 import { addJob, getWorkspaceJobs } from "../controllers/schedule.controller";
 // custom validators
@@ -28,6 +28,6 @@ scheduleRouter.post(
 );
 
 // get workspace jobs
-scheduleRouter.get("/", getWorkspaceJobs);
+scheduleRouter.get("/", [query("current_page").optional().isNumeric()], errorHandler, getWorkspaceJobs);
 
 export default scheduleRouter;

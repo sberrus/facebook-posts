@@ -80,7 +80,8 @@ export const getWorkspaceJobs = async (req: Request, res: Response) => {
 	const user = req.firebaseUser;
 	// workspace
 	let workspace;
-
+	// pagination
+	const current_page = Number(req.query["current_page"]) || 1;
 	try {
 		// get workspace
 		if (user) {
@@ -88,8 +89,8 @@ export const getWorkspaceJobs = async (req: Request, res: Response) => {
 		}
 		// get jobs
 		if (workspace) {
-			const jobs = await firestore.getWorkspaceJobs(workspace.id);
-			return res.json(jobs);
+			const jobsRes = await firestore.getWorkspaceJobs(workspace.id, current_page);
+			return res.json(jobsRes);
 		}
 
 		res.status(500).json({ ok: false, msg: "Server Error: Coudln't get workspace jobs, try again later" });

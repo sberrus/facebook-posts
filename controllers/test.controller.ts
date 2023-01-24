@@ -53,3 +53,7 @@ export const test = async (req: Request, res: Response) => {
 
 	res.json({ ok: true });
 };
+
+export const machineInfo = (req: Request, res: Response) => {
+	res.json({ date: new Date() });
+};

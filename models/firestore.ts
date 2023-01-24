@@ -120,13 +120,23 @@ class FirestoreController {
 	 * @param workspaceID Firestore workspace collection document id.
 	 * @returns
 	 */
-	public async getWorkspaceJobs(workspaceID: string) {
+	public async getWorkspaceJobs(workspaceID: string, current_page: number = 1) {
+		const limit = 10;
+		const offset = (current_page - 1) * 10; // 0 -> 0 ; 2 -> 10; 3 -> 20
 		try {
+			const postScopeJobsCount = await this.postScopeReference.count().get();
+
 			const postScopeJobs = await this.postScopeReference
 				.where("workspaceID", "==", workspaceID)
 				.orderBy("updated_at", "desc")
+				.limit(limit)
+				.offset(offset)
 				.get();
-			return postScopeJobs.docs.map((job) => job.data());
+			return {
+				jobs: postScopeJobs.docs.map((job) => job.data()),
+				jobs_count: postScopeJobsCount.data().count,
+				currentPage: current_page,
+			};
 		} catch (error) {
 			console.log("🚀 ~ file: firestore.ts:374 ~ FirestoreController ~ getWorkspaceJobs ~ error", error);
 			throw new Error("Firestore Error: Error fetching post_scope jobs");
