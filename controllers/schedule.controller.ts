@@ -82,6 +82,8 @@ export const getWorkspaceJobs = async (req: Request, res: Response) => {
 	let workspace;
 	// pagination
 	const current_page = Number(req.query["current_page"]) || 1;
+
+	
 	try {
 		// get workspace
 		if (user) {

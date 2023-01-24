@@ -28,6 +28,6 @@ scheduleRouter.post(
 );
 
 // get workspace jobs
-scheduleRouter.get("/", [query("current_page").optional().isNumeric()], errorHandler, getWorkspaceJobs);
+scheduleRouter.get("/", [query("current_page").optional().isNumeric(), errorHandler], getWorkspaceJobs);
 
 export default scheduleRouter;
